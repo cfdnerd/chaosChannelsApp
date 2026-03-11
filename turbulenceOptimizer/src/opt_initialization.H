@@ -1,27 +1,23 @@
 Info<< "Initialization\n" << endl;
 const char* optimizationHistoryFile = "optimization.hst";
-const char* suggestedPowerDiss0File = "suggestedPowerDiss0.log";
 const char* debugOptimizerJsonFile = "debugOptimizer.jsonl";
 const char* debugOptimizerLogFile = "debugOptimizer.log";
 const char* solverConvergenceFile = "solverConvergences.log";
 if (Pstream::master())
 {
   std::remove(optimizationHistoryFile);
-  std::remove(suggestedPowerDiss0File);
   std::remove(debugOptimizerJsonFile);
   std::remove(debugOptimizerLogFile);
   std::remove(solverConvergenceFile);
   std::ofstream historyFile(optimizationHistoryFile, std::ios::out);
   historyFile
     << "# MTO_ThermalFluid optimization history\n"
-    << "# Cols: Iter PDActLog PDCon PD0Sug V MeanT MaxT\n"
-    << "# PDActLog=PDCon*PowerDiss0, PDCon=PowerDiss used by MMA\n"
-    << "# PD0Sug=PowerDiss0*(PDCon/PowerDissMax) when PDCon>PowerDissRelax; else PowerDiss0\n"
+    << "# Cols: Iter PDActLog PDCon V MeanT MaxT\n"
+    << "# PDCon=power constraint value used by MMA\n"
     << std::left
     << std::setw(8) << "Iter"
     << std::setw(16) << "PDActLog"
     << std::setw(16) << "PDCon"
-    << std::setw(16) << "PD0Sug"
     << std::setw(16) << "V"
     << std::setw(16) << "MeanT"
     << std::setw(16) << "MaxT"
@@ -67,6 +63,32 @@ struct LinearSolveStats
   {}
 };
 
+struct FieldCorrectionStats
+{
+  label callCount;
+  scalar meanAbsDeltaSum;
+  scalar meanAbsDeltaMax;
+  scalar maxAbsDeltaMax;
+  scalar relL2DeltaSum;
+  scalar relL2DeltaMax;
+  scalar lastMeanAbsDelta;
+  scalar lastMaxAbsDelta;
+  scalar lastRelL2Delta;
+
+  FieldCorrectionStats()
+  :
+    callCount(0),
+    meanAbsDeltaSum(0),
+    meanAbsDeltaMax(0),
+    maxAbsDeltaMax(0),
+    relL2DeltaSum(0),
+    relL2DeltaMax(0),
+    lastMeanAbsDelta(0),
+    lastMaxAbsDelta(0),
+    lastRelL2Delta(0)
+  {}
+};
+
 auto resetLinearSolveStats =
 [](LinearSolveStats& stats)
 {
@@ -82,6 +104,20 @@ auto resetLinearSolveStats =
   stats.lastIterations = 0;
 };
 
+auto resetFieldCorrectionStats =
+[](FieldCorrectionStats& stats)
+{
+  stats.callCount = 0;
+  stats.meanAbsDeltaSum = 0;
+  stats.meanAbsDeltaMax = 0;
+  stats.maxAbsDeltaMax = 0;
+  stats.relL2DeltaSum = 0;
+  stats.relL2DeltaMax = 0;
+  stats.lastMeanAbsDelta = 0;
+  stats.lastMaxAbsDelta = 0;
+  stats.lastRelL2Delta = 0;
+};
+
 auto recordLinearSolve =
 [](LinearSolveStats& stats, const scalar initialResidual, const scalar finalResidual, const label iterations)
 {
@@ -95,6 +131,20 @@ auto recordLinearSolve =
   stats.lastInitialResidual = initialResidual;
   stats.lastFinalResidual = finalResidual;
   stats.lastIterations = iterations;
+};
+
+auto recordFieldCorrection =
+[](FieldCorrectionStats& stats, const scalar meanAbsDelta, const scalar maxAbsDelta, const scalar relL2Delta)
+{
+  stats.callCount++;
+  stats.meanAbsDeltaSum += meanAbsDelta;
+  stats.meanAbsDeltaMax = Foam::max(stats.meanAbsDeltaMax, meanAbsDelta);
+  stats.maxAbsDeltaMax = Foam::max(stats.maxAbsDeltaMax, maxAbsDelta);
+  stats.relL2DeltaSum += relL2Delta;
+  stats.relL2DeltaMax = Foam::max(stats.relL2DeltaMax, relL2Delta);
+  stats.lastMeanAbsDelta = meanAbsDelta;
+  stats.lastMaxAbsDelta = maxAbsDelta;
+  stats.lastRelL2Delta = relL2Delta;
 };
 
 const scalar linearSolveObsResidual = 1e-6;
@@ -150,6 +200,9 @@ LinearSolveStats xpFilterLinearSolveStats;
 LinearSolveStats fsensFilterLinearSolveStats;
 LinearSolveStats gsensPowerFilterLinearSolveStats;
 LinearSolveStats gsensVolFilterLinearSolveStats;
+FieldCorrectionStats kTurbulenceCorrectionStats;
+FieldCorrectionStats epsilonTurbulenceCorrectionStats;
+FieldCorrectionStats nutTurbulenceCorrectionStats;
 
 int i=0,opt=0;
 double del=0;
@@ -158,14 +211,11 @@ n=x.size();//n:length of x in the i-th core
 N=x.size();//N:design freedom
 reduce(N, sumOp<scalar>()); 
 
-scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PDActLog(0),PD0Sug(0),PD0SugMaxCum(-GREAT),PowerDissActualOverBase(0),maxT(0),sumT(0);
+scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PDActLog(0),PowerDissActualOverBase(0),maxT(0),sumT(0);
 scalar MeanTPhysical(0),PowerDissPhysical(0);
 scalar objectiveNormalized(0),powerConstraintNormalized(0);
 scalarList scenarioObjectiveNormalizedLast(nVelocityScenarios, 0.0);
 scalarList scenarioPowerNormalizedLast(nVelocityScenarios, 0.0);
-scalar PD0SugSumCum(0);
-label PD0SugCountCum(0);
-bool PD0SugLogInitialized(false);
 scalar previousObjectiveValue(0);
 bool hasPreviousObjectiveValue(false);
 bool stopOptimization(false);

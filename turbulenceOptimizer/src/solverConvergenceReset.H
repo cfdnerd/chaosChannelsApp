@@ -10,3 +10,6 @@ resetLinearSolveStats(xpFilterLinearSolveStats);
 resetLinearSolveStats(fsensFilterLinearSolveStats);
 resetLinearSolveStats(gsensPowerFilterLinearSolveStats);
 resetLinearSolveStats(gsensVolFilterLinearSolveStats);
+resetFieldCorrectionStats(kTurbulenceCorrectionStats);
+resetFieldCorrectionStats(epsilonTurbulenceCorrectionStats);
+resetFieldCorrectionStats(nutTurbulenceCorrectionStats);

@@ -58,6 +58,97 @@ if (Pstream::master())
       << "\n";
   };
 
+  auto writeCorrectionTableHeader =
+  [&]()
+  {
+    solverConvergenceLogFile
+      << "  "
+      << std::left
+      << std::setw(22) << "Field"
+      << std::setw(6) << "Stat"
+      << std::right
+      << std::setw(7) << "Calls"
+      << std::setw(16) << "AvgMean|d|"
+      << std::setw(16) << "MaxMean|d|"
+      << std::setw(16) << "Max|d|"
+      << std::setw(16) << "AvgRelL2"
+      << std::setw(16) << "MaxRelL2"
+      << std::setw(16) << "LastRelL2"
+      << "\n"
+      << "  "
+      << std::string(22 + 6 + 7 + 16 + 16 + 16 + 16 + 16 + 16, '-')
+      << "\n";
+  };
+
+  auto writeCorrectionStats =
+  [&](const char* fieldName, const FieldCorrectionStats& stats)
+  {
+    const scalar avgMeanAbsDelta =
+      stats.callCount > 0 ? stats.meanAbsDeltaSum/static_cast<scalar>(stats.callCount) : 0.0;
+    const scalar avgRelL2Delta =
+      stats.callCount > 0 ? stats.relL2DeltaSum/static_cast<scalar>(stats.callCount) : 0.0;
+    const char* status = stats.callCount > 0 ? "OK" : "SKIP";
+
+    solverConvergenceLogFile
+      << "  "
+      << std::left << std::setw(22) << fieldName
+      << std::setw(6) << status
+      << std::right
+      << std::setw(7) << stats.callCount
+      << std::scientific << std::setprecision(3)
+      << std::setw(16) << avgMeanAbsDelta
+      << std::setw(16) << stats.meanAbsDeltaMax
+      << std::setw(16) << stats.maxAbsDeltaMax
+      << std::setw(16) << avgRelL2Delta
+      << std::setw(16) << stats.relL2DeltaMax
+      << std::setw(16) << stats.lastRelL2Delta
+      << "\n";
+  };
+
+  auto vectorMagnitudeStats =
+  [&](const volVectorField& field, scalar& meanMagnitude, scalar& maxMagnitude)
+  {
+    const vectorField& internal = field.primitiveField();
+    scalar sumLocal(0.0);
+    scalar maxLocal(0.0);
+    scalar countGlobal = internal.size();
+    forAll(internal, cellI)
+    {
+      const scalar magValue = Foam::mag(internal[cellI]);
+      sumLocal += magValue;
+      maxLocal = Foam::max(maxLocal, magValue);
+    }
+    reduce(sumLocal, sumOp<scalar>());
+    reduce(maxLocal, maxOp<scalar>());
+    reduce(countGlobal, sumOp<scalar>());
+    meanMagnitude = sumLocal/Foam::max(countGlobal, scalar(SMALL));
+    maxMagnitude = maxLocal;
+  };
+
+  auto scalarFieldStats =
+  [&](const volScalarField& field, scalar& meanValue, scalar& minValue, scalar& maxValue)
+  {
+    const scalarField& internal = field.primitiveField();
+    scalar sumLocal(0.0);
+    scalar minLocal(GREAT);
+    scalar maxLocal(-GREAT);
+    scalar countGlobal = internal.size();
+    forAll(internal, cellI)
+    {
+      const scalar value = internal[cellI];
+      sumLocal += value;
+      minLocal = Foam::min(minLocal, value);
+      maxLocal = Foam::max(maxLocal, value);
+    }
+    reduce(sumLocal, sumOp<scalar>());
+    reduce(minLocal, minOp<scalar>());
+    reduce(maxLocal, maxOp<scalar>());
+    reduce(countGlobal, sumOp<scalar>());
+    meanValue = sumLocal/Foam::max(countGlobal, scalar(SMALL));
+    minValue = minLocal;
+    maxValue = maxLocal;
+  };
+
   solverConvergenceLogFile
     << "\n"
     << "=========================================================================================================\n"
@@ -85,4 +176,55 @@ if (Pstream::master())
   writeSolveStats("fsens filter", fsensFilterLinearSolveStats);
   writeSolveStats("gsensPower filter", gsensPowerFilterLinearSolveStats);
   writeSolveStats("gsensVol filter", gsensVolFilterLinearSolveStats);
+
+  solverConvergenceLogFile
+    << "\n"
+    << "[Turbulence-Primal Corrections]\n";
+  writeCorrectionTableHeader();
+  writeCorrectionStats("k correction", kTurbulenceCorrectionStats);
+  writeCorrectionStats("epsilon correction", epsilonTurbulenceCorrectionStats);
+  writeCorrectionStats("nut correction", nutTurbulenceCorrectionStats);
+
+  const scalar expectedPrimalCalls =
+    static_cast<scalar>(primalFlowIterations*nVelocityScenarios);
+  const scalar expectedAdjointCalls =
+    static_cast<scalar>(adjointFlowIterations*nVelocityScenarios);
+  const scalar paCorrectionsPerUa =
+    UaLinearSolveStats.callCount > 0
+      ? static_cast<scalar>(paLinearSolveStats.callCount)
+       /static_cast<scalar>(UaLinearSolveStats.callCount)
+      : 0.0;
+  const scalar pbCorrectionsPerUb =
+    UbLinearSolveStats.callCount > 0
+      ? static_cast<scalar>(pbLinearSolveStats.callCount)
+       /static_cast<scalar>(UbLinearSolveStats.callCount)
+      : 0.0;
+
+  scalar UaMeanMag(0.0), UaMaxMag(0.0), UbMeanMag(0.0), UbMaxMag(0.0);
+  scalar paMean(0.0), paMin(0.0), paMax(0.0), pbMean(0.0), pbMin(0.0), pbMax(0.0);
+  scalar TbMean(0.0), TbMin(0.0), TbMax(0.0);
+  vectorMagnitudeStats(Ua, UaMeanMag, UaMaxMag);
+  vectorMagnitudeStats(Ub, UbMeanMag, UbMaxMag);
+  scalarFieldStats(pa, paMean, paMin, paMax);
+  scalarFieldStats(pb, pbMean, pbMin, pbMax);
+  scalarFieldStats(Tb, TbMean, TbMin, TbMax);
+
+  solverConvergenceLogFile
+    << "\n"
+    << "[Turbulence And Adjoint Diagnostics]\n"
+    << "  Turbulence model          : " << turbulence->type() << "\n"
+    << "  Turbulence corrector intv : " << turbulenceCorrectorInterval << "\n"
+    << "  Primal flow solves        : " << ULinearSolveStats.callCount
+    << " / expected ~ " << expectedPrimalCalls << "\n"
+    << "  Adjoint momentum solves   : Ua=" << UaLinearSolveStats.callCount
+    << ", Ub=" << UbLinearSolveStats.callCount
+    << " / expected each ~ " << expectedAdjointCalls << "\n"
+    << "  Adjoint pressure loops    : pa/Ua=" << paCorrectionsPerUa
+    << ", pb/Ub=" << pbCorrectionsPerUb << "\n"
+    << "  Frozen turbulence adjoint : " << (frozenTurbulenceAdjoint ? "true" : "false") << "\n"
+    << "  |Ua| mean/max             : " << UaMeanMag << " / " << UaMaxMag << "\n"
+    << "  |Ub| mean/max             : " << UbMeanMag << " / " << UbMaxMag << "\n"
+    << "  pa mean/min/max           : " << paMean << " / " << paMin << " / " << paMax << "\n"
+    << "  pb mean/min/max           : " << pbMean << " / " << pbMin << " / " << pbMax << "\n"
+    << "  Tb mean/min/max           : " << TbMean << " / " << TbMin << " / " << TbMax << "\n";
 }

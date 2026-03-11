@@ -71,35 +71,9 @@ if (scenarioI == nVelocityScenarios-1)
   }
   PowerDissActual = PowerDissActualOverBase*PowerDiss0;
   PDActLog = PowerDissPhysical*PowerDiss0;
-  PD0Sug = PowerDiss0;
-  if (powerConstraintNormalized > PowerDissRelax && PowerDissMax > SMALL)
-  {
-    PD0Sug = PowerDiss0*(powerConstraintNormalized/Foam::max(PowerDissMax, SMALL));
-  }
-  const bool pd0SugDiffObserved = Foam::mag(PD0Sug - PowerDiss0) > SMALL;
-  if (pd0SugDiffObserved)
-  {
-    PD0SugMaxCum = Foam::max(PD0SugMaxCum, PD0Sug);
-    PD0SugSumCum += PD0Sug;
-    PD0SugCountCum++;
-  }
 
   if (Pstream::master())
   {
-     if (pd0SugDiffObserved && !PD0SugLogInitialized)
-     {
-       std::ofstream PD0SugLog(suggestedPowerDiss0File, std::ios::out);
-       PD0SugLog
-         << "# MTO_ThermalFluid suggested PowerDiss0 summary\n"
-         << "# Cols: Iter PD0SugMax_1_to_Iter PD0SugAvg_1_to_Iter\n"
-         << "# Stats exclude unchanged values where PD0Sug == PowerDiss0\n"
-         << std::left
-         << std::setw(8) << "Iter"
-         << std::setw(20) << "PD0SugMax_1_to_Iter"
-         << std::setw(20) << "PD0SugAvg_1_to_Iter"
-         << '\n';
-       PD0SugLogInitialized = true;
-     }
      std::ofstream historyFile(optimizationHistoryFile, std::ios::app);
      if (opt > 1 && ((opt - 1) % 25 == 0))
      {
@@ -108,7 +82,6 @@ if (scenarioI == nVelocityScenarios-1)
          << std::setw(8) << "Iter"
          << std::setw(16) << "PDActLog"
          << std::setw(16) << "PDCon"
-         << std::setw(16) << "PD0Sug"
          << std::setw(16) << "V"
          << std::setw(16) << "MeanT"
          << std::setw(16) << "MaxT"
@@ -120,23 +93,9 @@ if (scenarioI == nVelocityScenarios-1)
        << std::scientific << std::setprecision(8)
        << std::setw(16) << PDActLog
        << std::setw(16) << powerConstraintNormalized
-       << std::setw(16) << PD0Sug
        << std::setw(16) << V
        << std::setw(16) << objectiveNormalized
        << std::setw(16) << maxT
        << '\n';
-     if (PD0SugLogInitialized && PD0SugCountCum > 0 && opt > 0 && (opt % 100 == 0))
-     {
-       const scalar PD0SugAvgCum =
-         PD0SugSumCum/Foam::max(static_cast<scalar>(PD0SugCountCum), SMALL);
-       std::ofstream PD0SugLog(suggestedPowerDiss0File, std::ios::app);
-       PD0SugLog
-         << std::right
-         << std::setw(8) << opt
-         << std::scientific << std::setprecision(8)
-         << std::setw(20) << PD0SugMaxCum
-         << std::setw(20) << PD0SugAvgCum
-         << '\n';
-     }
   }
 }

@@ -106,7 +106,52 @@ fvOptions.correct(U);
 
 if (((i+1) % turbulenceCorrectorInterval == 0) || (i+1 == primalFlowIterations))
 {
+  const volScalarField kBefore(turbulence->k());
+  const volScalarField epsilonBefore(turbulence->epsilon());
+  const volScalarField nutBefore(turbulence->nut());
+
   turbulence->correct();
+
+  const volScalarField kAfter(turbulence->k());
+  const volScalarField epsilonAfter(turbulence->epsilon());
+  const volScalarField nutAfter(turbulence->nut());
+
+  auto accumulateCorrectionStats =
+  [&](const volScalarField& fieldBefore, const volScalarField& fieldAfter, FieldCorrectionStats& stats)
+  {
+    scalar absDeltaSumLocal(0.0);
+    scalar absDeltaMaxLocal(0.0);
+    scalar relL2NumeratorLocal(0.0);
+    scalar relL2DenominatorLocal(0.0);
+    const scalarField& beforeInternal = fieldBefore.primitiveField();
+    const scalarField& afterInternal = fieldAfter.primitiveField();
+    forAll(afterInternal, cellI)
+    {
+      const scalar delta = Foam::mag(afterInternal[cellI] - beforeInternal[cellI]);
+      absDeltaSumLocal += delta;
+      absDeltaMaxLocal = Foam::max(absDeltaMaxLocal, delta);
+      relL2NumeratorLocal += delta*delta;
+      relL2DenominatorLocal += beforeInternal[cellI]*beforeInternal[cellI];
+    }
+
+    scalar globalCellCount = afterInternal.size();
+    reduce(absDeltaSumLocal, sumOp<scalar>());
+    reduce(absDeltaMaxLocal, maxOp<scalar>());
+    reduce(relL2NumeratorLocal, sumOp<scalar>());
+    reduce(relL2DenominatorLocal, sumOp<scalar>());
+    reduce(globalCellCount, sumOp<scalar>());
+
+    const scalar meanAbsDelta =
+      absDeltaSumLocal/Foam::max(globalCellCount, scalar(SMALL));
+    const scalar relL2Delta =
+      Foam::sqrt(relL2NumeratorLocal/Foam::max(relL2DenominatorLocal, scalar(SMALL)));
+
+    recordFieldCorrection(stats, meanAbsDelta, absDeltaMaxLocal, relL2Delta);
+  };
+
+  accumulateCorrectionStats(kBefore, kAfter, kTurbulenceCorrectionStats);
+  accumulateCorrectionStats(epsilonBefore, epsilonAfter, epsilonTurbulenceCorrectionStats);
+  accumulateCorrectionStats(nutBefore, nutAfter, nutTurbulenceCorrectionStats);
 }
 
 U.storePrevIter();
