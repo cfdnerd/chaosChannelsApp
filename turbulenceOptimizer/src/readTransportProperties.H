@@ -261,6 +261,22 @@ if (!turbulenceProMode)
   thermalUnderRelaxation = 1.0;
 }
 
+volScalarField tbBcSmoothingMode
+(
+    IOobject
+    (
+        "tbBcSmoothingMode",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("tbBcSmoothingMode", dimless, turbulenceProMode ? 1.0 : 0.0),
+    zeroGradientFvPatchScalarField::typeName
+);
+tbBcSmoothingMode.correctBoundaryConditions();
+
 if (scenarioVelocities.size() == 0)
 {
   scenarioVelocities.setSize(1);
