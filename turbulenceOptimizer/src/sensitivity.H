@@ -1,8 +1,10 @@
 Info<<"sensitivity analysis"<<endl;
 if (scenarioI == 0)
 {
-  fsenshScenarioAccum = scalar(0.0);
-  gsenshPowerScenarioAccum = scalar(0.0);
+  fsenshScenarioAccum =
+    dimensionedScalar("zeroFsensScenario", fsenshScenarioAccum.dimensions(), 0.0);
+  gsenshPowerScenarioAccum =
+    dimensionedScalar("zeroGsensPowerScenario", gsenshPowerScenarioAccum.dimensions(), 0.0);
 }
 
 volScalarField dAlphaDx
