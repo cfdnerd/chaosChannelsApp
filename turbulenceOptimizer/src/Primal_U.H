@@ -1,14 +1,3 @@
-volScalarField* kPtr(NULL);
-volScalarField* epsilonPtr(NULL);
-if (mesh.foundObject<volScalarField>("k"))
-{
-  kPtr = &const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("k"));
-}
-if (mesh.foundObject<volScalarField>("epsilon"))
-{
-  epsilonPtr = &const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("epsilon"));
-}
-
 for(i=0;i<primalFlowIterations;i++)
 {
 MRF.correctBoundaryVelocity(U);
@@ -118,39 +107,6 @@ fvOptions.correct(U);
 if (((i+1) % turbulenceCorrectorInterval == 0) || (i+1 == primalFlowIterations))
 {
   turbulence->correct();
-  const scalar alphaScaleDenominator = Foam::max(alphaMax.value(), scalar(SMALL));
-  if (kPtr)
-  {
-    volScalarField& kField(*kPtr);
-    if (turbulenceStatePenaltyFactor > SMALL)
-    {
-      forAll(kField, cellI)
-      {
-        const scalar turbulencePenalty =
-          1.0 + turbulenceStatePenaltyFactor*alpha[cellI]/alphaScaleDenominator;
-        kField[cellI] = Foam::max(kField[cellI]/turbulencePenalty, kMinBound);
-      }
-    }
-    kField.max(dimensionedScalar("kMin", kField.dimensions(), kMinBound));
-  }
-  if (epsilonPtr)
-  {
-    volScalarField& epsilonField(*epsilonPtr);
-    if (turbulenceStatePenaltyFactor > SMALL)
-    {
-      forAll(epsilonField, cellI)
-      {
-        const scalar turbulencePenalty =
-          1.0 + turbulenceStatePenaltyFactor*alpha[cellI]/alphaScaleDenominator;
-        epsilonField[cellI] =
-          Foam::max(epsilonField[cellI]/turbulencePenalty, epsilonMinBound);
-      }
-    }
-    epsilonField.max
-    (
-      dimensionedScalar("epsilonMin", epsilonField.dimensions(), epsilonMinBound)
-    );
-  }
 }
 
 U.storePrevIter();
