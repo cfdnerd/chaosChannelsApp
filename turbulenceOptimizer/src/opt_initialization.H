@@ -1,34 +1,20 @@
 Info<< "Initialization\n" << endl;
 const char* optimizationHistoryFile = "optimization.hst";
-const char* optimizationLogFile = "optimization.log";
 const char* debugOptimizerJsonFile = "debugOptimizer.jsonl";
 const char* debugOptimizerLogFile = "debugOptimizer.log";
 const char* solverConvergenceFile = "solverConvergences.log";
 if (Pstream::master())
 {
   std::remove(optimizationHistoryFile);
-  std::remove(optimizationLogFile);
   std::remove(debugOptimizerJsonFile);
   std::remove(debugOptimizerLogFile);
   std::remove(solverConvergenceFile);
   std::ofstream historyFile(optimizationHistoryFile, std::ios::out);
   historyFile
     << "# MTO_ThermalFluid optimization history\n"
-    << "# Cols: Iter PDCon V MeanT MaxT\n"
-    << "# PDCon=power constraint value used by MMA\n"
-    << std::left
-    << std::setw(8) << "Iter"
-    << std::setw(16) << "PDCon"
-    << std::setw(16) << "V"
-    << std::setw(16) << "MeanT"
-    << std::setw(16) << "MaxT"
-    << '\n';
-
-  std::ofstream optimizationLogStream(optimizationLogFile, std::ios::out);
-  optimizationLogStream
-    << "# MTO_ThermalFluid optimization physical metrics log\n"
     << "# Cols: Iter PDAct PDCon V MeanT MaxT\n"
     << "# PDAct=PowerDissActual physical-scale pumping power metric\n"
+    << "# PDCon=power constraint value used by MMA (normalized)\n"
     << std::left
     << std::setw(8) << "Iter"
     << std::setw(16) << "PDAct"
