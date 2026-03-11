@@ -13,9 +13,9 @@ const scalar pbCorrectionsPerUb =
      /static_cast<scalar>(UbLinearSolveStats.callCount)
     : 0.0;
 
-scalar UaMeanMag(0.0), UaMaxMag(0.0), UbMeanMag(0.0), UbMaxMag(0.0);
-scalar paMean(0.0), paMin(0.0), paMax(0.0), pbMean(0.0), pbMin(0.0), pbMax(0.0);
-scalar TbMean(0.0), TbMin(0.0), TbMax(0.0);
+scalar UaMeanMagConv(0.0), UaMaxMagConv(0.0), UbMeanMagConv(0.0), UbMaxMagConv(0.0);
+scalar paMeanConv(0.0), paMinConv(0.0), paMaxConv(0.0), pbMeanConv(0.0), pbMinConv(0.0), pbMaxConv(0.0);
+scalar TbMeanConv(0.0), TbMinConv(0.0), TbMaxConv(0.0);
 {
   auto vectorMagnitudeStats =
   [&](const volVectorField& field, scalar& meanMagnitude, scalar& maxMagnitude)
@@ -61,11 +61,11 @@ scalar TbMean(0.0), TbMin(0.0), TbMax(0.0);
     maxValue = maxLocal;
   };
 
-  vectorMagnitudeStats(Ua, UaMeanMag, UaMaxMag);
-  vectorMagnitudeStats(Ub, UbMeanMag, UbMaxMag);
-  scalarFieldStats(pa, paMean, paMin, paMax);
-  scalarFieldStats(pb, pbMean, pbMin, pbMax);
-  scalarFieldStats(Tb, TbMean, TbMin, TbMax);
+  vectorMagnitudeStats(Ua, UaMeanMagConv, UaMaxMagConv);
+  vectorMagnitudeStats(Ub, UbMeanMagConv, UbMaxMagConv);
+  scalarFieldStats(pa, paMeanConv, paMinConv, paMaxConv);
+  scalarFieldStats(pb, pbMeanConv, pbMinConv, pbMaxConv);
+  scalarFieldStats(Tb, TbMeanConv, TbMinConv, TbMaxConv);
 }
 
 if (Pstream::master())
@@ -224,9 +224,9 @@ if (Pstream::master())
     << "  Adjoint pressure loops    : pa/Ua=" << paCorrectionsPerUa
     << ", pb/Ub=" << pbCorrectionsPerUb << "\n"
     << "  Frozen turbulence adjoint : " << (frozenTurbulenceAdjoint ? "true" : "false") << "\n"
-    << "  |Ua| mean/max             : " << UaMeanMag << " / " << UaMaxMag << "\n"
-    << "  |Ub| mean/max             : " << UbMeanMag << " / " << UbMaxMag << "\n"
-    << "  pa mean/min/max           : " << paMean << " / " << paMin << " / " << paMax << "\n"
-    << "  pb mean/min/max           : " << pbMean << " / " << pbMin << " / " << pbMax << "\n"
-    << "  Tb mean/min/max           : " << TbMean << " / " << TbMin << " / " << TbMax << "\n";
+    << "  |Ua| mean/max             : " << UaMeanMagConv << " / " << UaMaxMagConv << "\n"
+    << "  |Ub| mean/max             : " << UbMeanMagConv << " / " << UbMaxMagConv << "\n"
+    << "  pa mean/min/max           : " << paMeanConv << " / " << paMinConv << " / " << paMaxConv << "\n"
+    << "  pb mean/min/max           : " << pbMeanConv << " / " << pbMinConv << " / " << pbMaxConv << "\n"
+    << "  Tb mean/min/max           : " << TbMeanConv << " / " << TbMinConv << " / " << TbMaxConv << "\n";
 }
