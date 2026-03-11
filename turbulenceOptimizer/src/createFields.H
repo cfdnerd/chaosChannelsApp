@@ -28,7 +28,6 @@ scalar mma_dec(readScalar(optProperties.lookup("mma_dec")));
 scalar mma_inc(readScalar(optProperties.lookup("mma_inc")));
 scalar movlim(readScalar(optProperties.lookup("movlim")));
 scalar voluse(readScalar(optProperties.lookup("voluse")));
-scalar GeoDim(readScalar(optProperties.lookup("GeoDim")));
 scalar PowerDiss0(readScalar(optProperties.lookup("PowerDiss0")));
 scalar PowerDissMax(readScalar(optProperties.lookup("PowerDissMax")));
 scalar PowerDissRelax(readScalar(optProperties.lookup("PowerDissRelax")));

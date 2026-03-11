@@ -1,5 +1,4 @@
 Info<<"cost function"<<endl;
-const scalar meshFactor = std::pow(mesh.V()[0],1.0/3);
 if (scenarioI == 0)
 {
   MeanT=0;
@@ -19,10 +18,6 @@ for (i=0; i<nObjPatch; i++)
      + 0.5*magSqr(U.boundaryField()[conPatchList[i]])));
 }
 scenarioPowerDiss=scenarioPowerDiss/PowerDiss0;
-if(GeoDim==2)
-{
- scenarioPowerDiss=scenarioPowerDiss/meshFactor;
-}
 reduce(scenarioPowerDiss, sumOp<scalar>());
 scalar scenarioMaxT = gMax(T);
 reduce(scenarioMaxT, maxOp<scalar>());
@@ -92,10 +87,6 @@ if (scenarioI == nVelocityScenarios-1)
   powerConstraintNormalized = PowerDiss;
 
   PowerDissActualOverBase = PowerDissPhysical;
-  if(GeoDim==2)
-  {
-    PowerDissActualOverBase = PowerDissActualOverBase*meshFactor;
-  }
   PowerDissActual = PowerDissActualOverBase*PowerDiss0;
 
   if (Pstream::master())
