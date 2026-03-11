@@ -11,14 +11,32 @@ if (Pstream::master())
   std::remove(solverConvergenceFile);
   std::ofstream historyFile(optimizationHistoryFile, std::ios::out);
   historyFile
-    << "# MTO_ThermalFluid optimization history\n"
-    << "# Cols: Iter PDAct PDCon V MeanT MaxT\n"
-    << "# PDAct=PowerDissActual physical-scale pumping power metric\n"
-    << "# PDCon=power constraint value used by MMA (normalized)\n"
+    << "# MTO_ThermalFluid optimization history\n";
+  if (!normalizeScenarioObjectives)
+  {
+    historyFile
+      << "# Cols: Iter PDAct PDCon PD0Sug V MeanT MaxT\n"
+      << "# PDAct=PowerDissActual physical-scale pumping power metric\n"
+      << "# PDCon=power constraint value used by MMA (normalized)\n"
+      << "# PD0Sug=PowerDiss0*(PDCon/PowerDissMax) when PDCon>PowerDissRelax; else PowerDiss0\n";
+  }
+  else
+  {
+    historyFile
+      << "# Cols: Iter PDAct PDCon V MeanT MaxT\n"
+      << "# PDAct=PowerDissActual physical-scale pumping power metric\n"
+      << "# PDCon=power constraint value used by MMA (normalized)\n";
+  }
+  historyFile
     << std::left
     << std::setw(8) << "Iter"
     << std::setw(16) << "PDAct"
-    << std::setw(16) << "PDCon"
+    << std::setw(16) << "PDCon";
+  if (!normalizeScenarioObjectives)
+  {
+    historyFile << std::setw(16) << "PD0Sug";
+  }
+  historyFile
     << std::setw(16) << "V"
     << std::setw(16) << "MeanT"
     << std::setw(16) << "MaxT"
@@ -226,7 +244,7 @@ n=x.size();//n:length of x in the i-th core
 N=x.size();//N:design freedom
 reduce(N, sumOp<scalar>()); 
 
-scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PowerDissActualOverBase(0),maxT(0),sumT(0);
+scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PowerDissActualOverBase(0),PD0Sug(0),maxT(0),sumT(0);
 scalar MeanTPhysical(0),PowerDissPhysical(0);
 scalar objectiveNormalized(0),powerConstraintNormalized(0);
 scalarList scenarioObjectiveNormalizedLast(nVelocityScenarios, 0.0);

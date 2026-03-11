@@ -85,6 +85,23 @@ if (scenarioI == nVelocityScenarios-1)
 {
   objectiveNormalized = MeanT;
   powerConstraintNormalized = PowerDiss;
+  PD0Sug = PowerDiss0;
+  if
+  (
+    !normalizeScenarioObjectives
+    &&
+    powerConstraintNormalized > PowerDissRelax
+    &&
+    PowerDissMax > SMALL
+  )
+  {
+    PD0Sug =
+      PowerDiss0
+     *(
+        powerConstraintNormalized
+       /Foam::max(PowerDissMax, scalar(SMALL))
+      );
+  }
 
   PowerDissActualOverBase = PowerDissPhysical;
   PowerDissActual = PowerDissActualOverBase*PowerDiss0;
@@ -97,7 +114,12 @@ if (scenarioI == nVelocityScenarios-1)
        << std::setw(8) << opt
        << std::scientific << std::setprecision(8)
        << std::setw(16) << PowerDissActual
-       << std::setw(16) << powerConstraintNormalized
+       << std::setw(16) << powerConstraintNormalized;
+     if (!normalizeScenarioObjectives)
+     {
+       historyFile << std::setw(16) << PD0Sug;
+     }
+     historyFile
        << std::setw(16) << V
        << std::setw(16) << objectiveNormalized
        << std::setw(16) << maxT
