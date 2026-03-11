@@ -1,22 +1,37 @@
 Info<< "Initialization\n" << endl;
 const char* optimizationHistoryFile = "optimization.hst";
+const char* optimizationLogFile = "optimization.log";
 const char* debugOptimizerJsonFile = "debugOptimizer.jsonl";
 const char* debugOptimizerLogFile = "debugOptimizer.log";
 const char* solverConvergenceFile = "solverConvergences.log";
 if (Pstream::master())
 {
   std::remove(optimizationHistoryFile);
+  std::remove(optimizationLogFile);
   std::remove(debugOptimizerJsonFile);
   std::remove(debugOptimizerLogFile);
   std::remove(solverConvergenceFile);
   std::ofstream historyFile(optimizationHistoryFile, std::ios::out);
   historyFile
     << "# MTO_ThermalFluid optimization history\n"
-    << "# Cols: Iter PDActLog PDCon V MeanT MaxT\n"
+    << "# Cols: Iter PDCon V MeanT MaxT\n"
     << "# PDCon=power constraint value used by MMA\n"
     << std::left
     << std::setw(8) << "Iter"
-    << std::setw(16) << "PDActLog"
+    << std::setw(16) << "PDCon"
+    << std::setw(16) << "V"
+    << std::setw(16) << "MeanT"
+    << std::setw(16) << "MaxT"
+    << '\n';
+
+  std::ofstream optimizationLogStream(optimizationLogFile, std::ios::out);
+  optimizationLogStream
+    << "# MTO_ThermalFluid optimization physical metrics log\n"
+    << "# Cols: Iter PDAct PDCon V MeanT MaxT\n"
+    << "# PDAct=PowerDissActual physical-scale pumping power metric\n"
+    << std::left
+    << std::setw(8) << "Iter"
+    << std::setw(16) << "PDAct"
     << std::setw(16) << "PDCon"
     << std::setw(16) << "V"
     << std::setw(16) << "MeanT"
@@ -225,7 +240,7 @@ n=x.size();//n:length of x in the i-th core
 N=x.size();//N:design freedom
 reduce(N, sumOp<scalar>()); 
 
-scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PDActLog(0),PowerDissActualOverBase(0),maxT(0),sumT(0);
+scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PowerDissActualOverBase(0),maxT(0),sumT(0);
 scalar MeanTPhysical(0),PowerDissPhysical(0);
 scalar objectiveNormalized(0),powerConstraintNormalized(0);
 scalarList scenarioObjectiveNormalizedLast(nVelocityScenarios, 0.0);

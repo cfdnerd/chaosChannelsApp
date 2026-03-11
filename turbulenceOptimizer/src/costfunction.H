@@ -97,17 +97,25 @@ if (scenarioI == nVelocityScenarios-1)
     PowerDissActualOverBase = PowerDissActualOverBase*meshFactor;
   }
   PowerDissActual = PowerDissActualOverBase*PowerDiss0;
-  PDActLog = PowerDissPhysical*PowerDiss0;
 
   if (Pstream::master())
   {
      std::ofstream historyFile(optimizationHistoryFile, std::ios::app);
+     std::ofstream optimizationLogStream(optimizationLogFile, std::ios::app);
      if (opt > 1 && ((opt - 1) % 25 == 0))
      {
        historyFile
          << std::left
          << std::setw(8) << "Iter"
-         << std::setw(16) << "PDActLog"
+         << std::setw(16) << "PDCon"
+         << std::setw(16) << "V"
+         << std::setw(16) << "MeanT"
+         << std::setw(16) << "MaxT"
+         << '\n';
+       optimizationLogStream
+         << std::left
+         << std::setw(8) << "Iter"
+         << std::setw(16) << "PDAct"
          << std::setw(16) << "PDCon"
          << std::setw(16) << "V"
          << std::setw(16) << "MeanT"
@@ -118,7 +126,16 @@ if (scenarioI == nVelocityScenarios-1)
        << std::right
        << std::setw(8) << opt
        << std::scientific << std::setprecision(8)
-       << std::setw(16) << PDActLog
+       << std::setw(16) << powerConstraintNormalized
+       << std::setw(16) << V
+       << std::setw(16) << objectiveNormalized
+       << std::setw(16) << maxT
+       << '\n';
+     optimizationLogStream
+       << std::right
+       << std::setw(8) << opt
+       << std::scientific << std::setprecision(8)
+       << std::setw(16) << PowerDissActual
        << std::setw(16) << powerConstraintNormalized
        << std::setw(16) << V
        << std::setw(16) << objectiveNormalized
