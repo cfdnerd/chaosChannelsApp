@@ -10,9 +10,9 @@ recordLinearSolve
   xpFilterLinearSolvePerformance.nIterations()
 );
 //***********************************//Heaviside_filter
-del=Foam::min(0.2*opt,100);
-eta0=0.0001;
-eta1=1.0;
+del=Foam::min(projectionBetaRate*opt,projectionBetaMax);
+eta0=projectionEtaLower;
+eta1=projectionEtaUpper;
 y0=diff(xp,mesh.V(),del,eta0,n);
 reduce(y0, sumOp<scalar>());
 do
@@ -29,7 +29,7 @@ do
      eta0=eta5;
      y0=y5;
   }
-} while ((eta1-eta0)>0.0001);
+} while ((eta1-eta0)>projectionEtaTolerance);
 
 for(i=0;i<n;i++)
 {
@@ -40,5 +40,6 @@ for(i=0;i<n;i++)
    else
    {
      xh[i]=eta5+(1-eta5)*(1-Foam::exp(-del*(xp[i]-eta5)/(1-eta5))+(xp[i]-eta5)*Foam::exp(-del)/(1-eta5));
-   }   
+   }
+   xh[i]=Foam::min(Foam::max(xh[i],rhoMin),scalar(1.0));
 }

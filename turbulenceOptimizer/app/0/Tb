@@ -10,7 +10,7 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    object      Ta;
+    object      Tb;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -34,7 +34,7 @@ boundaryField
        fractionExpression "f";
        value           uniform 0;
     }
-    wall
+    Wall
     {
         type            zeroGradient;   
     }

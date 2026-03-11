@@ -72,3 +72,31 @@ volScalarField fsensMeanT
     zeroGradientFvPatchScalarField::typeName
 );
 volScalarField fsenshMeanT(fsensMeanT);
+volScalarField fsenshScenarioAccum
+(
+    IOobject
+    (
+        "fsenshScenarioAccum",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zeroFsensScenario", fsensMeanT.dimensions(), 0.0),
+    zeroGradientFvPatchScalarField::typeName
+);
+volScalarField gsenshPowerScenarioAccum
+(
+    IOobject
+    (
+        "gsenshPowerScenarioAccum",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zeroGsensPowerScenario", gsenshPowerDiss.dimensions(), 0.0),
+    zeroGradientFvPatchScalarField::typeName
+);

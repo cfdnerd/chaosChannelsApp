@@ -32,12 +32,21 @@ solvers
         maxIter         5000;
     }
 
-    "(U|Ua|Ub|Uc|k|epsilon)"
+    "(U|Ua|Ub|Uc)"
     {
         solver          smoothSolver;
         smoother        symGaussSeidel;
         nSweeps         2;
         tolerance       1e-9;
+        relTol          0;
+        maxIter         5000;
+    }
+    "(k|epsilon)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        nSweeps         2;
+        tolerance       1e-8;
         relTol          0;
         maxIter         5000;
     }
@@ -89,6 +98,13 @@ SIMPLE
 // nOuterCorrectors 10;
     pRefCell 0;
     pRefValue 0;
+    residualControl
+    {
+        p               1e-5;
+        U               1e-6;
+        "(k|epsilon)"   1e-6;
+        T               1e-7;
+    }
 
 }
 
@@ -102,7 +118,7 @@ relaxationFactors
     equations
     {
         "(U|Ua|Ub|Uc)"     0.7;
-        "(k|epsilon)"   0.7;
+        "(k|epsilon)"      0.5;
     }
 }
 constraintFunctionDict_flow

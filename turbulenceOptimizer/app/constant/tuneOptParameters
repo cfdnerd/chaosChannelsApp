@@ -15,13 +15,60 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Optimizer stopping controls.
-// The optimizer exits early only after the design step, objective drift,
-// and constraint violation all remain small for several consecutive loops.
 convergenceControl
 {
-    // Intentionally empty: use solver defaults from createFields.H.
-    // Add only non-default overrides here when tuning is needed.
+    optMinIterations             50;
+    optStallWindow               5;
+    optObjectiveTol              1e-3;
+    optConstraintTol             1e-3;
+    optStepTol                   5e-3;
+    optPowerConstraintWeight     1.0;
+    optVolumeConstraintWeight    1.0;
+}
+
+continuationControl
+{
+    rhoMin                       1e-3;
+    projectionBetaRate           0.2;
+    projectionBetaMax            100;
+    projectionEtaLower           1e-4;
+    projectionEtaUpper           1.0;
+    projectionEtaTolerance       1e-4;
+
+    alphaRampDivisor             7.0;
+    alphaRampIterations          63;
+    alphaGrowthStartIteration    100;
+    alphaGrowthFactor            1.05;
+
+    quInitial                    0.005;
+    quRampStartIteration         80;
+    quGrowthRate                 1e-4;
+    quMax                        0.01;
+
+    filterRStart                 2.5;
+    filterREnd                   2.0;
+    filterRContinuationStart     30;
+    filterRContinuationEnd       220;
+}
+
+turbulenceOptimization
+{
+    primalFlowIterations         60;
+    adjointFlowIterations        40;
+    turbulenceCorrectorInterval  1;
+    frozenTurbulenceAdjoint      yes;
+    useTurbulentResistance       yes;
+    turbulenceResistanceFactor   1.0;
+    turbulenceResistanceCap      100;
+    turbulenceStatePenaltyFactor 1.0;
+    turbulenceIntensity          0.05;
+    turbulenceLengthScale        1e-3;
+    kMinBound                    1e-10;
+    epsilonMinBound              1e-10;
+
+    scenarioVelocities           (1 2 3);
+    scenarioWeights              (0.3333333333 0.3333333333 0.3333333333);
+    normalizeScenarioObjectives  yes;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

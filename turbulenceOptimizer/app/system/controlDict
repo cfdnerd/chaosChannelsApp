@@ -15,8 +15,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     myadjointShapeOptimizationFoam;
-//application     simpleFoam;
+application     MTO_Turbulence;
 
 startFrom       startTime;
 

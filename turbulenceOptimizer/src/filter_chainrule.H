@@ -1,5 +1,9 @@
-fsenshMeanT=fsenshMeanT/gMax(mag(fsenshMeanT.primitiveField()));
-gsenshPowerDiss=gsenshPowerDiss/gMax(mag(gsenshPowerDiss.primitiveField()));
+const scalar fsensScale =
+  Foam::max(gMax(mag(fsenshMeanT.primitiveField())), scalar(SMALL));
+const scalar gsensPowerScale =
+  Foam::max(gMax(mag(gsenshPowerDiss.primitiveField())), scalar(SMALL));
+fsenshMeanT=fsenshMeanT/fsensScale;
+gsenshPowerDiss=gsenshPowerDiss/gsensPowerScale;
 gsenshVol.primitiveFieldRef() = 1.0;
 //***********************************//Heaviside_filter
 if(opt>1)

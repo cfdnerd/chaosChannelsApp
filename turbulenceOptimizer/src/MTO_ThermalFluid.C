@@ -26,13 +26,17 @@ int main(int argc, char *argv[])
     {
         #include "solverConvergenceReset.H"
         #include "update.H"
-        #include "Primal_U.H"
-        #include "Primal_T.H"
-        #include "AdjointHeat_Tb.H"
-        #include "AdjointHeat_Ub.H"
-        #include "AdjointFlow_Ua.H"
-        #include "costfunction.H"              
-        #include "sensitivity.H"
+        for (label scenarioI = 0; scenarioI < nVelocityScenarios; ++scenarioI)
+        {
+            #include "applyScenario.H"
+            #include "Primal_U.H"
+            #include "Primal_T.H"
+            #include "AdjointHeat_Tb.H"
+            #include "AdjointHeat_Ub.H"
+            #include "AdjointFlow_Ua.H"
+            #include "costfunction.H"
+            #include "sensitivity.H"
+        }
         runTime.write();
         if (stopOptimization)
         {

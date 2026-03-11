@@ -54,6 +54,59 @@ scalar optVolumeConstraintWeight
 (
   convergenceControl.lookupOrDefault<scalar>("optVolumeConstraintWeight", 1.0)
 );
+scalar rhoMin(1e-3);
+scalar projectionBetaRate(0.2);
+scalar projectionBetaMax(100.0);
+scalar projectionEtaLower(1e-4);
+scalar projectionEtaUpper(1.0);
+scalar projectionEtaTolerance(1e-4);
+scalar alphaRampDivisor(7.0);
+label alphaRampIterations(63);
+label alphaGrowthStartIteration(100);
+scalar alphaGrowthFactor(1.05);
+scalar quInitial(0.005);
+label quRampStartIteration(80);
+scalar quGrowthRate(1e-4);
+scalar quMax(0.01);
+scalar filterRStart(filterR);
+scalar filterREnd(filterR);
+label filterRContinuationStart(0);
+label filterRContinuationEnd(1);
+if (tuneOptParameters.found("continuationControl"))
+{
+  const dictionary& continuationControl = tuneOptParameters.subDict("continuationControl");
+  rhoMin = continuationControl.lookupOrDefault<scalar>("rhoMin", rhoMin);
+  projectionBetaRate = continuationControl.lookupOrDefault<scalar>("projectionBetaRate", projectionBetaRate);
+  projectionBetaMax = continuationControl.lookupOrDefault<scalar>("projectionBetaMax", projectionBetaMax);
+  projectionEtaLower = continuationControl.lookupOrDefault<scalar>("projectionEtaLower", projectionEtaLower);
+  projectionEtaUpper = continuationControl.lookupOrDefault<scalar>("projectionEtaUpper", projectionEtaUpper);
+  projectionEtaTolerance = continuationControl.lookupOrDefault<scalar>("projectionEtaTolerance", projectionEtaTolerance);
+  alphaRampDivisor = continuationControl.lookupOrDefault<scalar>("alphaRampDivisor", alphaRampDivisor);
+  alphaRampIterations = continuationControl.lookupOrDefault<label>("alphaRampIterations", alphaRampIterations);
+  alphaGrowthStartIteration = continuationControl.lookupOrDefault<label>("alphaGrowthStartIteration", alphaGrowthStartIteration);
+  alphaGrowthFactor = continuationControl.lookupOrDefault<scalar>("alphaGrowthFactor", alphaGrowthFactor);
+  quInitial = continuationControl.lookupOrDefault<scalar>("quInitial", quInitial);
+  quRampStartIteration = continuationControl.lookupOrDefault<label>("quRampStartIteration", quRampStartIteration);
+  quGrowthRate = continuationControl.lookupOrDefault<scalar>("quGrowthRate", quGrowthRate);
+  quMax = continuationControl.lookupOrDefault<scalar>("quMax", quMax);
+  filterRStart = continuationControl.lookupOrDefault<scalar>("filterRStart", filterRStart);
+  filterREnd = continuationControl.lookupOrDefault<scalar>("filterREnd", filterREnd);
+  filterRContinuationStart =
+    continuationControl.lookupOrDefault<label>("filterRContinuationStart", filterRContinuationStart);
+  filterRContinuationEnd =
+    continuationControl.lookupOrDefault<label>("filterRContinuationEnd", filterRContinuationEnd);
+}
+rhoMin = Foam::min(Foam::max(rhoMin, scalar(1e-6)), scalar(0.25));
+projectionEtaLower = Foam::max(projectionEtaLower, scalar(1e-8));
+projectionEtaUpper = Foam::min(Foam::max(projectionEtaUpper, projectionEtaLower + 1e-6), scalar(1.0));
+projectionEtaTolerance = Foam::max(projectionEtaTolerance, scalar(1e-8));
+alphaRampDivisor = Foam::max(alphaRampDivisor, scalar(1.0));
+alphaGrowthFactor = Foam::max(alphaGrowthFactor, scalar(1.0));
+quInitial = Foam::max(quInitial, scalar(1e-6));
+quGrowthRate = Foam::max(quGrowthRate, scalar(0.0));
+quMax = Foam::max(quMax, quInitial);
+filterRStart = Foam::max(filterRStart, scalar(1e-6));
+filterREnd = Foam::max(filterREnd, scalar(1e-6));
 if (optPowerConstraintWeight <= 0.0)
 {
   FatalErrorInFunction

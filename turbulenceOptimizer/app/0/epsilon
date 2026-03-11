@@ -10,38 +10,44 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    object      T;
+    object      epsilon;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 1 0 0 0];
+dimensions      [0 2 -3 0 0 0 0];
 
-internalField   uniform 0;
+internalField   uniform 0.0151;
 
 boundaryField
 {
     inlet
     {
         type            fixedValue;
-        value           uniform 0;
+        value           uniform 0.0151;
     }
+
     outlet
     {
-        type            zeroGradient;   
+        type            inletOutlet;
+        inletValue      uniform 0.0151;
+        value           uniform 0.0151;
     }
+
     Wall
     {
-        type            zeroGradient;   
+        type            epsilonWallFunction;
+        value           uniform 1e-10;
     }
+
     right
     {
         type            symmetry;
     }
+
     frontAndBack
     {
         type            empty;
     }
-
 }
 
 // ************************************************************************* //

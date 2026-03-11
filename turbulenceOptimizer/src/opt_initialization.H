@@ -159,6 +159,10 @@ N=x.size();//N:design freedom
 reduce(N, sumOp<scalar>()); 
 
 scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PDActLog(0),PD0Sug(0),PD0SugMaxCum(-GREAT),PowerDissActualOverBase(0),maxT(0),sumT(0);
+scalar MeanTPhysical(0),PowerDissPhysical(0);
+scalar objectiveNormalized(0),powerConstraintNormalized(0);
+scalarList scenarioObjectiveNormalizedLast(nVelocityScenarios, 0.0);
+scalarList scenarioPowerNormalizedLast(nVelocityScenarios, 0.0);
 scalar PD0SugSumCum(0);
 label PD0SugCountCum(0);
 bool PD0SugLogInitialized(false);
@@ -168,7 +172,7 @@ bool stopOptimization(false);
 label optimizerConvergedStreak(0);
 word optimizerStopReason("running");
 double len=std::pow(area/N, 1.0/3);
-b.value()=1.0/(filterR*len/3.464)/(filterR*len/3.464);
+b.value()=1.0/(filterRStart*len/3.464)/(filterRStart*len/3.464);
 //***********************************//MMA
 int m=2;//number of constraint
 MMA mma(n,m);
