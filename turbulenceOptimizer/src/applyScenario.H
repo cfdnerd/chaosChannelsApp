@@ -11,17 +11,6 @@ if (mesh.foundObject<volScalarField>("k") && mesh.foundObject<volScalarField>("e
     const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("k"));
   volScalarField& epsilonField =
     const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("epsilon"));
-
-  const scalar kInlet =
-    Foam::max(1.5*Foam::sqr(scenarioVelocity*turbulenceIntensity), kMinBound);
-  const scalar epsilonInlet =
-    Foam::max
-    (
-      Foam::pow(0.09, 0.75)*Foam::pow(kInlet, 1.5)/turbulenceLengthScale,
-      epsilonMinBound
-    );
-  kField.boundaryFieldRef()[inletPatchID] = kInlet;
-  epsilonField.boundaryFieldRef()[inletPatchID] = epsilonInlet;
   kField.max(dimensionedScalar("kMinScenario", kField.dimensions(), kMinBound));
   epsilonField.max
   (
