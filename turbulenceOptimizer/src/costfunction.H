@@ -27,6 +27,33 @@ reduce(scenarioPowerDiss, sumOp<scalar>());
 scalar scenarioMaxT = gMax(T);
 reduce(scenarioMaxT, maxOp<scalar>());
 
+if
+(
+  turbulenceProMode
+  &&
+  (
+    !std::isfinite(static_cast<double>(scenarioMeanT))
+    ||
+    !std::isfinite(static_cast<double>(scenarioPowerDiss))
+    ||
+    !std::isfinite(static_cast<double>(scenarioMaxT))
+  )
+)
+{
+  stopOptimization = true;
+  optimizerStopReason = "nonfinite_cost_metrics";
+  if (Pstream::master())
+  {
+    WarningInFunction
+      << "Detected non-finite cost metrics at optimizer iteration " << opt
+      << " (scenario " << scenarioI + 1 << ")."
+      << " MeanT=" << scenarioMeanT
+      << ", Power=" << scenarioPowerDiss
+      << ", MaxT=" << scenarioMaxT
+      << endl;
+  }
+}
+
 scenarioMeanTLast[scenarioI] = scenarioMeanT;
 scenarioPowerLast[scenarioI] = scenarioPowerDiss;
 scenarioMaxTLast[scenarioI] = scenarioMaxT;

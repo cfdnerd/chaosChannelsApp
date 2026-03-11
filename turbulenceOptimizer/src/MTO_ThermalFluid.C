@@ -30,11 +30,23 @@ int main(int argc, char *argv[])
         {
             #include "applyScenario.H"
             #include "Primal_U.H"
+            if (stopOptimization)
+            {
+                break;
+            }
             #include "Primal_T.H"
+            if (stopOptimization)
+            {
+                break;
+            }
             #include "AdjointHeat_Tb.H"
             #include "AdjointHeat_Ub.H"
             #include "AdjointFlow_Ua.H"
             #include "costfunction.H"
+            if (stopOptimization)
+            {
+                break;
+            }
             #include "sensitivity.H"
         }
         runTime.write();

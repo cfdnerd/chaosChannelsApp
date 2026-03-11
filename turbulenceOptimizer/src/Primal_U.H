@@ -8,7 +8,8 @@ if (useTurbulentResistance)
   {
     const scalar clippedNutByNu =
       Foam::min(Foam::max(nutByNu[cellI], scalar(0.0)), turbulenceResistanceCap);
-    alphaResistanceScale[cellI] = 1.0 + turbulenceResistanceFactor*clippedNutByNu;
+    alphaResistanceScale[cellI] =
+      1.0 + turbulenceResistanceFactor*turbulenceStatePenaltyFactor*clippedNutByNu;
   }
 }
 else
@@ -104,13 +105,88 @@ U = HbyA - rAtU()*fvc::grad(p);
 U.correctBoundaryConditions();
 fvOptions.correct(U);
 
-if (((i+1) % turbulenceCorrectorInterval == 0) || (i+1 == primalFlowIterations))
+const bool doTurbulenceCorrection =
+  opt > freezeTurbulenceUntilIteration
+  &&
+  (((i+1) % turbulenceCorrectorInterval == 0) || (i+1 == primalFlowIterations));
+if (doTurbulenceCorrection)
 {
   const volScalarField kBefore(turbulence->k());
   const volScalarField epsilonBefore(turbulence->epsilon());
   const volScalarField nutBefore(turbulence->nut());
 
   turbulence->correct();
+
+  if
+  (
+    enforceTurbulenceBounds
+    &&
+    mesh.foundObject<volScalarField>("k")
+    &&
+    mesh.foundObject<volScalarField>("epsilon")
+    &&
+    mesh.foundObject<volScalarField>("nut")
+  )
+  {
+    volScalarField& kField =
+      const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("k"));
+    volScalarField& epsilonField =
+      const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("epsilon"));
+    volScalarField& nutField =
+      const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("nut"));
+    scalarField& kInternal = kField.primitiveFieldRef();
+    scalarField& epsilonInternal = epsilonField.primitiveFieldRef();
+    scalarField& nutInternal = nutField.primitiveFieldRef();
+    forAll(kInternal, cellI)
+    {
+      const scalar originalK = kInternal[cellI];
+      const scalar originalEpsilon = epsilonInternal[cellI];
+      const scalar originalNut = nutInternal[cellI];
+
+      if (!std::isfinite(static_cast<double>(originalK)))
+      {
+        kInternal[cellI] = kMinBound;
+      }
+      else
+      {
+        kInternal[cellI] = Foam::min(Foam::max(originalK, kMinBound), kMaxBound);
+      }
+      if (!std::isfinite(static_cast<double>(originalEpsilon)))
+      {
+        epsilonInternal[cellI] = epsilonMinBound;
+      }
+      else
+      {
+        epsilonInternal[cellI] =
+          Foam::min(Foam::max(originalEpsilon, epsilonMinBound), epsilonMaxBound);
+      }
+      if (!std::isfinite(static_cast<double>(originalNut)))
+      {
+        nutInternal[cellI] = 0.0;
+      }
+      else
+      {
+        nutInternal[cellI] = Foam::min(Foam::max(originalNut, scalar(0.0)), nutMaxBound);
+      }
+
+      if (kInternal[cellI] != originalK)
+      {
+        turbulenceKClipCount++;
+      }
+      if (epsilonInternal[cellI] != originalEpsilon)
+      {
+        turbulenceEpsilonClipCount++;
+      }
+      if (nutInternal[cellI] != originalNut)
+      {
+        turbulenceNutClipCount++;
+      }
+    }
+
+    kField.correctBoundaryConditions();
+    epsilonField.correctBoundaryConditions();
+    nutField.correctBoundaryConditions();
+  }
 
   const volScalarField kAfter(turbulence->k());
   const volScalarField epsilonAfter(turbulence->epsilon());

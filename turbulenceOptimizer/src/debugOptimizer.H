@@ -259,6 +259,8 @@ const scalar powerConstraintMargin = gx[0]/powerConstraintWeightSafe;
 const scalar volumeConstraintWeightSafe = Foam::max(optVolumeConstraintWeight, SMALL);
 const scalar volumeConstraintMargin = gx[1]/volumeConstraintWeightSafe;
 const scalar maxConstraintViolation = Foam::max(Foam::max(powerConstraintMargin, volumeConstraintMargin), scalar(0));
+const bool externalStopRequested = stopOptimization;
+const word externalStopReason = optimizerStopReason;
 const bool convergenceCandidate =
   opt >= optMinIterations
   &&
@@ -272,8 +274,17 @@ const bool convergenceCandidate =
   &&
   maxAbsXhChangeLocal <= optStepTol;
 optimizerConvergedStreak = convergenceCandidate ? optimizerConvergedStreak + 1 : 0;
-stopOptimization = optimizerConvergedStreak >= optStallWindow;
-optimizerStopReason = stopOptimization ? word("converged") : word("running");
+const bool convergenceStop = optimizerConvergedStreak >= optStallWindow;
+if (externalStopRequested)
+{
+  stopOptimization = true;
+  optimizerStopReason = externalStopReason;
+}
+else
+{
+  stopOptimization = convergenceStop;
+  optimizerStopReason = convergenceStop ? word("converged") : word("running");
+}
 
 if (Pstream::master())
 {

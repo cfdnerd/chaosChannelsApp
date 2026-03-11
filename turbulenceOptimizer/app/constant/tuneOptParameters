@@ -53,9 +53,12 @@ continuationControl
 
 turbulenceOptimization
 {
+    // Master toggle for non-publication safety heuristics (clips/guards/fallback hardening).
+    turbulenceProMode            no;
     primalFlowIterations         60;
     adjointFlowIterations        40;
     turbulenceCorrectorInterval  1;
+    freezeTurbulenceUntilIteration 3;
     frozenTurbulenceAdjoint      yes;
     useTurbulentResistance       yes;
     turbulenceResistanceFactor   1.0;
@@ -63,12 +66,28 @@ turbulenceOptimization
     turbulenceStatePenaltyFactor 1.0;
     turbulenceIntensity          0.05;
     turbulenceLengthScale        1e-3;
+    turbulenceModelCmu           0.09;
+    updateTurbulenceInletFromVelocity yes;
+    enforceTurbulenceBounds      yes;
     kMinBound                    1e-10;
     epsilonMinBound              1e-10;
+    kMaxBound                    1e4;
+    epsilonMaxBound              1e8;
+    nutMaxBound                  1e3;
     enableThermalFallback        yes;
     thermalFallbackResidualThreshold 1e-7;
     thermalFallbackIterationThreshold 15000;
     thermalFallbackBlend         0.3;
+    thermalFallbackMaxAttempts   2;
+    thermalFallbackDiffusivityFactor 3.0;
+    thermalUnderRelaxation       0.7;
+    enableThermalDivergenceGuard yes;
+    thermalFieldAbsMax           1e6;
+    clipTemperatureField         yes;
+    temperatureLowerBound        -1000;
+    temperatureUpperBound        1000;
+    enableAdjointHeatSourceClipping yes;
+    adjointHeatSourceClip        1e4;
 
     scenarioVelocities           (1.0);
     scenarioWeights              (1.0);

@@ -207,10 +207,16 @@ FieldCorrectionStats nutTurbulenceCorrectionStats;
 label thermalFallbackTriggerCount(0);
 label thermalFallbackSuccessCount(0);
 label thermalFallbackMissingSolverCount(0);
+label thermalFallbackFailureCount(0);
 label thermalFallbackLastPrimaryIterations(0);
 label thermalFallbackLastFallbackIterations(-1);
 scalar thermalFallbackLastPrimaryFinalResidual(0.0);
 scalar thermalFallbackLastFallbackFinalResidual(-1.0);
+scalar thermalLastMin(0.0);
+scalar thermalLastMax(0.0);
+label turbulenceKClipCount(0);
+label turbulenceEpsilonClipCount(0);
+label turbulenceNutClipCount(0);
 
 int i=0,opt=0;
 double del=0;

@@ -73,17 +73,29 @@ const bool hasThermalFallbackSolver =
 label thermalFallbackTriggerCountConv = thermalFallbackTriggerCount;
 label thermalFallbackSuccessCountConv = thermalFallbackSuccessCount;
 label thermalFallbackMissingSolverCountConv = thermalFallbackMissingSolverCount;
+label thermalFallbackFailureCountConv = thermalFallbackFailureCount;
 label thermalFallbackLastPrimaryIterationsConv = thermalFallbackLastPrimaryIterations;
 label thermalFallbackLastFallbackIterationsConv = thermalFallbackLastFallbackIterations;
 scalar thermalFallbackLastPrimaryFinalResidualConv = thermalFallbackLastPrimaryFinalResidual;
 scalar thermalFallbackLastFallbackFinalResidualConv = thermalFallbackLastFallbackFinalResidual;
+scalar thermalLastMinConv = thermalLastMin;
+scalar thermalLastMaxConv = thermalLastMax;
+label turbulenceKClipCountConv = turbulenceKClipCount;
+label turbulenceEpsilonClipCountConv = turbulenceEpsilonClipCount;
+label turbulenceNutClipCountConv = turbulenceNutClipCount;
 reduce(thermalFallbackTriggerCountConv, maxOp<label>());
 reduce(thermalFallbackSuccessCountConv, maxOp<label>());
 reduce(thermalFallbackMissingSolverCountConv, maxOp<label>());
+reduce(thermalFallbackFailureCountConv, maxOp<label>());
 reduce(thermalFallbackLastPrimaryIterationsConv, maxOp<label>());
 reduce(thermalFallbackLastFallbackIterationsConv, maxOp<label>());
 reduce(thermalFallbackLastPrimaryFinalResidualConv, maxOp<scalar>());
 reduce(thermalFallbackLastFallbackFinalResidualConv, maxOp<scalar>());
+reduce(thermalLastMinConv, minOp<scalar>());
+reduce(thermalLastMaxConv, maxOp<scalar>());
+reduce(turbulenceKClipCountConv, sumOp<label>());
+reduce(turbulenceEpsilonClipCountConv, sumOp<label>());
+reduce(turbulenceNutClipCountConv, sumOp<label>());
 
 if (Pstream::master())
 {
@@ -233,6 +245,7 @@ if (Pstream::master())
     << "\n"
     << "[Turbulence And Adjoint Diagnostics]\n"
     << "  Turbulence model          : " << turbulence->type() << "\n"
+    << "  turbulenceProMode         : " << (turbulenceProMode ? "true" : "false") << "\n"
     << "  Turbulence corrector intv : " << turbulenceCorrectorInterval << "\n"
     << "  Primal flow solves        : " << ULinearSolveStats.callCount
     << " / expected ~ " << expectedPrimalCalls << "\n"
@@ -243,13 +256,19 @@ if (Pstream::master())
     << ", solver configured: " << (hasThermalFallbackSolver ? "true" : "false") << "\n"
     << "  Thermal fallback triggers : " << thermalFallbackTriggerCountConv
     << ", successful improves: " << thermalFallbackSuccessCountConv
-    << ", missing solver: " << thermalFallbackMissingSolverCountConv << "\n"
+    << ", missing solver: " << thermalFallbackMissingSolverCountConv
+    << ", failed: " << thermalFallbackFailureCountConv << "\n"
     << "  T primary/fallback        : finalRes="
     << thermalFallbackLastPrimaryFinalResidualConv << " / "
     << thermalFallbackLastFallbackFinalResidualConv
     << ", iters="
     << thermalFallbackLastPrimaryIterationsConv << " / "
     << thermalFallbackLastFallbackIterationsConv << "\n"
+    << "  T guarded min/max         : " << thermalLastMinConv << " / " << thermalLastMaxConv << "\n"
+    << "  Turbulence clips (k/e/n)  : "
+    << turbulenceKClipCountConv << " / "
+    << turbulenceEpsilonClipCountConv << " / "
+    << turbulenceNutClipCountConv << "\n"
     << "  Adjoint pressure loops    : pa/Ua=" << paCorrectionsPerUa
     << ", pb/Ub=" << pbCorrectionsPerUb << "\n"
     << "  Frozen turbulence adjoint : " << (frozenTurbulenceAdjoint ? "true" : "false") << "\n"

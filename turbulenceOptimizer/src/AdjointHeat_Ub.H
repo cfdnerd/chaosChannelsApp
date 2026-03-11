@@ -4,6 +4,21 @@ if (!frozenTurbulenceAdjoint)
   adjointNuEffUb = nu;
 }
 volScalarField alphaEffAdjUb(alpha*alphaResistanceScale);
+volScalarField TbSource(Tb);
+if (enableAdjointHeatSourceClipping)
+{
+  scalarField& tbSourceInternal = TbSource.primitiveFieldRef();
+  forAll(tbSourceInternal, cellI)
+  {
+    tbSourceInternal[cellI] =
+      Foam::min
+      (
+        Foam::max(tbSourceInternal[cellI], -adjointHeatSourceClip),
+        adjointHeatSourceClip
+      );
+  }
+  TbSource.correctBoundaryConditions();
+}
 
 for(i=0;i<adjointFlowIterations;i++)
 {    
@@ -15,7 +30,7 @@ tmp<fvVectorMatrix> tUbEqn
   + adjointTransposeConvectionb
   - fvm::laplacian(adjointNuEffUb,Ub)
   + fvm::Sp(alphaEffAdjUb, Ub)
-  + b1*Tb*fvc::grad(T)
+  + b1*TbSource*fvc::grad(T)
  ==
     fvOptions(Ub)
 );
