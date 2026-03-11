@@ -1,0 +1,12 @@
+resetLinearSolveStats(ULinearSolveStats);
+resetLinearSolveStats(pLinearSolveStats);
+resetLinearSolveStats(TLinearSolveStats);
+resetLinearSolveStats(TbLinearSolveStats);
+resetLinearSolveStats(UbLinearSolveStats);
+resetLinearSolveStats(pbLinearSolveStats);
+resetLinearSolveStats(UaLinearSolveStats);
+resetLinearSolveStats(paLinearSolveStats);
+resetLinearSolveStats(xpFilterLinearSolveStats);
+resetLinearSolveStats(fsensFilterLinearSolveStats);
+resetLinearSolveStats(gsensPowerFilterLinearSolveStats);
+resetLinearSolveStats(gsensVolFilterLinearSolveStats);

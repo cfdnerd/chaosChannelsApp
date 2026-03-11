@@ -1,0 +1,33 @@
+OMPI_ROOT = /shared/home/azureuser/lib/openfoam/mto/ThirdParty-6/platforms/linux64Gcc/openmpi-1.10.7
+GCC_INTERNAL_INCLUDE := $(shell g++ -print-file-name=include)
+
+EXE_INC = \
+    -I$(LIB_SRC)/TurbulenceModels/turbulenceModels/lnInclude \
+    -I$(LIB_SRC)/TurbulenceModels/incompressible/lnInclude \
+    -I$(LIB_SRC)/TurbulenceModels/compressible/lnInclude \
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/transportModels/incompressible/singlePhaseTransportModel \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude \
+    -I$(PETSC_DIR)/include \
+    -I$(PETSC_DIR)/include/mpiuni \
+    -I$(PETSC_DIR)/$(PETSC_ARCH)/include \
+    -I$(OMPI_ROOT)/include \
+    -I$(OMPI_ROOT)/include/openmpi \
+    -I$(GCC_INTERNAL_INCLUDE) \
+    -DOMPI_SKIP_MPICXX \
+    -DMPICH_SKIP_MPICXX
+EXE_LIBS = \
+    -lturbulenceModels \
+    -lincompressibleTurbulenceModels \
+    -lincompressibleTransportModels \
+    -lfiniteVolume \
+    -lmeshTools \
+    -lfvOptions \
+    -L$(PETSC_DIR)/$(PETSC_ARCH)/lib \
+    -lpetsc \
+    -L$(OMPI_ROOT)/lib64 \
+    -lmpi_cxx \
+    -lmpi \
+    -L$(FOAM_USER_LIBBIN) \
+    -lMMA_yu
