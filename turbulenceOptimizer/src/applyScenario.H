@@ -27,8 +27,6 @@ if (mesh.foundObject<volScalarField>("k") && mesh.foundObject<volScalarField>("e
   (
     dimensionedScalar("epsilonMinScenario", epsilonField.dimensions(), epsilonMinBound)
   );
-  kField.correctBoundaryConditions();
-  epsilonField.correctBoundaryConditions();
 }
 
 Info<< "Running scenario " << (scenarioI + 1) << "/" << nVelocityScenarios

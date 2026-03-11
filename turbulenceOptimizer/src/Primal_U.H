@@ -132,7 +132,6 @@ if (((i+1) % turbulenceCorrectorInterval == 0) || (i+1 == primalFlowIterations))
       }
     }
     kField.max(dimensionedScalar("kMin", kField.dimensions(), kMinBound));
-    kField.correctBoundaryConditions();
   }
   if (epsilonPtr)
   {
@@ -151,7 +150,6 @@ if (((i+1) % turbulenceCorrectorInterval == 0) || (i+1 == primalFlowIterations))
     (
       dimensionedScalar("epsilonMin", epsilonField.dimensions(), epsilonMinBound)
     );
-    epsilonField.correctBoundaryConditions();
   }
 }
 
