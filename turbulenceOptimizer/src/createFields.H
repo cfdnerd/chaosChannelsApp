@@ -40,6 +40,13 @@ Switch fluid_area(optProperties.lookup("fluid_area"));
 Switch test_area(optProperties.lookup("test_area"));
 scalar Pnorm(readScalar(optProperties.lookup("Pnorm")));
 scalar objFunction(readScalar(optProperties.lookup("objFunction")));
+Switch turbulenceProMode(false);
+if (tuneOptParameters.found("turbulenceOptimization"))
+{
+  const dictionary& turbulenceOptimization = tuneOptParameters.subDict("turbulenceOptimization");
+  turbulenceProMode =
+    turbulenceOptimization.lookupOrDefault<Switch>("turbulenceProMode", turbulenceProMode);
+}
 const dictionary& convergenceControl = tuneOptParameters.subDict("convergenceControl");
 label optMinIterations(convergenceControl.lookupOrDefault<label>("optMinIterations", 50));
 label optStallWindow(convergenceControl.lookupOrDefault<label>("optStallWindow", 5));
@@ -78,7 +85,7 @@ scalar filterRStart(filterR);
 scalar filterREnd(filterR);
 label filterRContinuationStart(0);
 label filterRContinuationEnd(1);
-if (tuneOptParameters.found("continuationControl"))
+if (turbulenceProMode && tuneOptParameters.found("continuationControl"))
 {
   const dictionary& continuationControl = tuneOptParameters.subDict("continuationControl");
   rhoMin = continuationControl.lookupOrDefault<scalar>("rhoMin", rhoMin);

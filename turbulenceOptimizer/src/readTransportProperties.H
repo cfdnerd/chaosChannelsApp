@@ -60,7 +60,6 @@ label primalFlowIterations(60);
 label adjointFlowIterations(40);
 label turbulenceCorrectorInterval(1);
 label freezeTurbulenceUntilIteration(0);
-Switch turbulenceProMode(false);
 Switch useTurbulentResistance(true);
 Switch frozenTurbulenceAdjoint(true);
 Switch normalizeScenarioObjectives(true);
@@ -253,12 +252,10 @@ turbulenceModelCmu = Foam::max(turbulenceModelCmu, scalar(1e-6));
 if (!turbulenceProMode)
 {
   // Non-publication safety heuristics are centrally gated by turbulenceProMode.
-  enableThermalFallback = false;
   enforceTurbulenceBounds = false;
   enableThermalDivergenceGuard = false;
   clipTemperatureField = false;
   enableAdjointHeatSourceClipping = false;
-  thermalUnderRelaxation = 1.0;
 }
 
 volScalarField tbBcSmoothingMode
@@ -334,7 +331,10 @@ Info<< "Velocity scenarios [m/s]: " << scenarioVelocities
 Info<< "turbulenceProMode: " << (turbulenceProMode ? "on" : "off") << endl;
 Info<< "Heuristic stabilizers: "
     << (turbulenceProMode ? "enabled" : "disabled")
-    << " (thermal fallback / clipping / guarding)" << endl;
+    << " (turbulence bounds / clipping / divergence guarding)" << endl;
+Info<< "Thermal fallback path: "
+    << (enableThermalFallback ? "enabled" : "disabled")
+    << " (general, independent of turbulenceProMode)" << endl;
 Info<< "Stability controls: freezeTurbulenceUntilIteration="
     << freezeTurbulenceUntilIteration
     << ", turbulence bounds=[" << kMinBound << "," << kMaxBound

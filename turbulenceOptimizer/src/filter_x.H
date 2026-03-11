@@ -10,52 +10,59 @@ recordLinearSolve
   xpFilterLinearSolvePerformance.nIterations()
 );
 //***********************************//Heaviside_filter
-scalar maxAbsXStepForProjectionLocal(0.0);
-for(i=0;i<n;i++)
+if (turbulenceProMode)
 {
-  maxAbsXStepForProjectionLocal =
-    Foam::max(maxAbsXStepForProjectionLocal, Foam::mag(x[i] - xOld[i]));
-}
-reduce(maxAbsXStepForProjectionLocal, maxOp<scalar>());
+  scalar maxAbsXStepForProjectionLocal(0.0);
+  for(i=0;i<n;i++)
+  {
+    maxAbsXStepForProjectionLocal =
+      Foam::max(maxAbsXStepForProjectionLocal, Foam::mag(x[i] - xOld[i]));
+  }
+  reduce(maxAbsXStepForProjectionLocal, maxOp<scalar>());
 
-const scalar powerConstraintLimitForProjection = Foam::max(PowerDissMax, scalar(SMALL));
-const scalar powerConstraintViolationForProjection =
-  Foam::max(powerConstraintNormalized/powerConstraintLimitForProjection - 1.0, scalar(0.0));
-scalar objectiveRelativeDeltaForProjection(GREAT);
-if (hasPreviousObjectiveValue)
-{
-  objectiveRelativeDeltaForProjection =
-    Foam::mag(objectiveNormalized-previousObjectiveValue)
-   /Foam::max(Foam::mag(objectiveNormalized), scalar(SMALL));
-}
+  const scalar powerConstraintLimitForProjection =
+    Foam::max(Foam::max(PowerDissRelax-opt*0.2, PowerDissMax), scalar(SMALL));
+  const scalar powerConstraintViolationForProjection =
+    Foam::max(powerConstraintNormalized/powerConstraintLimitForProjection - 1.0, scalar(0.0));
+  scalar objectiveRelativeDeltaForProjection(GREAT);
+  if (hasPreviousObjectiveValue)
+  {
+    objectiveRelativeDeltaForProjection =
+      Foam::mag(objectiveNormalized-previousObjectiveValue)
+     /Foam::max(Foam::mag(objectiveNormalized), scalar(SMALL));
+  }
 
-const bool projectionUpdateIteration =
-  (opt == 1) || ((opt % projectionUpdateInterval) == 0);
-bool projectionUpdateStable =
-  objectiveRelativeDeltaForProjection <= projectionObjectiveTolForBeta
-  &&
-  maxAbsXStepForProjectionLocal <= projectionStepTolForBeta;
-if (projectionRequireConstraintForBeta)
-{
-  projectionUpdateStable =
-    projectionUpdateStable
+  const bool projectionUpdateIteration =
+    (opt == 1) || ((opt % projectionUpdateInterval) == 0);
+  bool projectionUpdateStable =
+    objectiveRelativeDeltaForProjection <= projectionObjectiveTolForBeta
     &&
-    powerConstraintViolationForProjection <= projectionConstraintTolForBeta;
-}
+    maxAbsXStepForProjectionLocal <= projectionStepTolForBeta;
+  if (projectionRequireConstraintForBeta)
+  {
+    projectionUpdateStable =
+      projectionUpdateStable
+      &&
+      powerConstraintViolationForProjection <= projectionConstraintTolForBeta;
+  }
 
-if (opt == 1)
-{
-  del = projectionBetaInitial;
-}
-else if (projectionUpdateIteration && projectionUpdateStable)
-{
-  del = Foam::min(del + projectionBetaRate, projectionBetaMax);
+  if (opt == 1)
+  {
+    del = projectionBetaInitial;
+  }
+  else if (projectionUpdateIteration && projectionUpdateStable)
+  {
+    del = Foam::min(del + projectionBetaRate, projectionBetaMax);
+  }
+  else
+  {
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
+  }
 }
 else
 {
-  del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
+  del = Foam::min(projectionBetaRate*opt, projectionBetaMax);
 }
-
 eta0=projectionEtaLower;
 eta1=projectionEtaUpper;
 y0=diff(xp,mesh.V(),del,eta0,n);
