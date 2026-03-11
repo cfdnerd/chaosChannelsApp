@@ -66,8 +66,8 @@ turbulenceOptimization
     kMinBound                    1e-10;
     epsilonMinBound              1e-10;
 
-    scenarioVelocities           (1 2 3);
-    scenarioWeights              (0.3333333333 0.3333333333 0.3333333333);
+    scenarioVelocities           (1.0);
+    scenarioWeights              (1.0);
     normalizeScenarioObjectives  yes;
 }
 
