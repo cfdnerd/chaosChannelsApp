@@ -65,6 +65,15 @@ solvers
         nCellsInCoarsestLevel 20;
         maxIter         20000;
     }  
+    TFallback
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        nSweeps         2;
+        tolerance       1e-8;
+        relTol          0;
+        maxIter         8000;
+    }
      "(Ta|Tb)"
     {
         solver          GAMG;

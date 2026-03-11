@@ -68,6 +68,23 @@ scalar TbMeanConv(0.0), TbMinConv(0.0), TbMaxConv(0.0);
   scalarFieldStats(Tb, TbMeanConv, TbMinConv, TbMaxConv);
 }
 
+const bool hasThermalFallbackSolver =
+  mesh.solutionDict().subDict("solvers").found("TFallback");
+label thermalFallbackTriggerCountConv = thermalFallbackTriggerCount;
+label thermalFallbackSuccessCountConv = thermalFallbackSuccessCount;
+label thermalFallbackMissingSolverCountConv = thermalFallbackMissingSolverCount;
+label thermalFallbackLastPrimaryIterationsConv = thermalFallbackLastPrimaryIterations;
+label thermalFallbackLastFallbackIterationsConv = thermalFallbackLastFallbackIterations;
+scalar thermalFallbackLastPrimaryFinalResidualConv = thermalFallbackLastPrimaryFinalResidual;
+scalar thermalFallbackLastFallbackFinalResidualConv = thermalFallbackLastFallbackFinalResidual;
+reduce(thermalFallbackTriggerCountConv, maxOp<label>());
+reduce(thermalFallbackSuccessCountConv, maxOp<label>());
+reduce(thermalFallbackMissingSolverCountConv, maxOp<label>());
+reduce(thermalFallbackLastPrimaryIterationsConv, maxOp<label>());
+reduce(thermalFallbackLastFallbackIterationsConv, maxOp<label>());
+reduce(thermalFallbackLastPrimaryFinalResidualConv, maxOp<scalar>());
+reduce(thermalFallbackLastFallbackFinalResidualConv, maxOp<scalar>());
+
 if (Pstream::master())
 {
   std::ofstream solverConvergenceLogFile(solverConvergenceFile, std::ios::app);
@@ -188,6 +205,7 @@ if (Pstream::master())
   writeSolveStats("U momentum", ULinearSolveStats);
   writeSolveStats("p pressure", pLinearSolveStats);
   writeSolveStats("T thermal", TLinearSolveStats);
+  writeSolveStats("T thermal fallback", TFallbackLinearSolveStats);
   writeSolveStats("Tb adjoint thermal", TbLinearSolveStats);
   writeSolveStats("Ub adjoint momentum", UbLinearSolveStats);
   writeSolveStats("pb adjoint pressure", pbLinearSolveStats);
@@ -221,6 +239,17 @@ if (Pstream::master())
     << "  Adjoint momentum solves   : Ua=" << UaLinearSolveStats.callCount
     << ", Ub=" << UbLinearSolveStats.callCount
     << " / expected each ~ " << expectedAdjointCalls << "\n"
+    << "  Thermal fallback enabled  : " << (enableThermalFallback ? "true" : "false")
+    << ", solver configured: " << (hasThermalFallbackSolver ? "true" : "false") << "\n"
+    << "  Thermal fallback triggers : " << thermalFallbackTriggerCountConv
+    << ", successful improves: " << thermalFallbackSuccessCountConv
+    << ", missing solver: " << thermalFallbackMissingSolverCountConv << "\n"
+    << "  T primary/fallback        : finalRes="
+    << thermalFallbackLastPrimaryFinalResidualConv << " / "
+    << thermalFallbackLastFallbackFinalResidualConv
+    << ", iters="
+    << thermalFallbackLastPrimaryIterationsConv << " / "
+    << thermalFallbackLastFallbackIterationsConv << "\n"
     << "  Adjoint pressure loops    : pa/Ua=" << paCorrectionsPerUa
     << ", pb/Ub=" << pbCorrectionsPerUb << "\n"
     << "  Frozen turbulence adjoint : " << (frozenTurbulenceAdjoint ? "true" : "false") << "\n"

@@ -191,6 +191,7 @@ auto linearSolveSeverityFromStats =
 LinearSolveStats ULinearSolveStats;
 LinearSolveStats pLinearSolveStats;
 LinearSolveStats TLinearSolveStats;
+LinearSolveStats TFallbackLinearSolveStats;
 LinearSolveStats TbLinearSolveStats;
 LinearSolveStats UbLinearSolveStats;
 LinearSolveStats pbLinearSolveStats;
@@ -203,6 +204,13 @@ LinearSolveStats gsensVolFilterLinearSolveStats;
 FieldCorrectionStats kTurbulenceCorrectionStats;
 FieldCorrectionStats epsilonTurbulenceCorrectionStats;
 FieldCorrectionStats nutTurbulenceCorrectionStats;
+label thermalFallbackTriggerCount(0);
+label thermalFallbackSuccessCount(0);
+label thermalFallbackMissingSolverCount(0);
+label thermalFallbackLastPrimaryIterations(0);
+label thermalFallbackLastFallbackIterations(-1);
+scalar thermalFallbackLastPrimaryFinalResidual(0.0);
+scalar thermalFallbackLastFallbackFinalResidual(-1.0);
 
 int i=0,opt=0;
 double del=0;

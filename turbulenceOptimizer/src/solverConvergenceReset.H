@@ -1,6 +1,7 @@
 resetLinearSolveStats(ULinearSolveStats);
 resetLinearSolveStats(pLinearSolveStats);
 resetLinearSolveStats(TLinearSolveStats);
+resetLinearSolveStats(TFallbackLinearSolveStats);
 resetLinearSolveStats(TbLinearSolveStats);
 resetLinearSolveStats(UbLinearSolveStats);
 resetLinearSolveStats(pbLinearSolveStats);
@@ -13,3 +14,10 @@ resetLinearSolveStats(gsensVolFilterLinearSolveStats);
 resetFieldCorrectionStats(kTurbulenceCorrectionStats);
 resetFieldCorrectionStats(epsilonTurbulenceCorrectionStats);
 resetFieldCorrectionStats(nutTurbulenceCorrectionStats);
+thermalFallbackTriggerCount = 0;
+thermalFallbackSuccessCount = 0;
+thermalFallbackMissingSolverCount = 0;
+thermalFallbackLastPrimaryIterations = 0;
+thermalFallbackLastFallbackIterations = -1;
+thermalFallbackLastPrimaryFinalResidual = 0.0;
+thermalFallbackLastFallbackFinalResidual = -1.0;

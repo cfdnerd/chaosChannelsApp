@@ -62,6 +62,7 @@ label turbulenceCorrectorInterval(1);
 Switch useTurbulentResistance(true);
 Switch frozenTurbulenceAdjoint(true);
 Switch normalizeScenarioObjectives(true);
+Switch enableThermalFallback(true);
 scalar turbulenceResistanceFactor(1.0);
 scalar turbulenceResistanceCap(100.0);
 scalar turbulenceStatePenaltyFactor(1.0);
@@ -69,6 +70,9 @@ scalar turbulenceIntensity(0.05);
 scalar turbulenceLengthScale(1e-3);
 scalar kMinBound(1e-10);
 scalar epsilonMinBound(1e-10);
+scalar thermalFallbackResidualThreshold(1e-7);
+label thermalFallbackIterationThreshold(15000);
+scalar thermalFallbackBlend(0.3);
 
 label inletPatchID(mesh.boundaryMesh().findPatchID("inlet"));
 if (inletPatchID < 0)
@@ -107,6 +111,8 @@ if (tuneOptParameters.found("turbulenceOptimization"))
     turbulenceOptimization.lookupOrDefault<Switch>("frozenTurbulenceAdjoint", frozenTurbulenceAdjoint);
   normalizeScenarioObjectives =
     turbulenceOptimization.lookupOrDefault<Switch>("normalizeScenarioObjectives", normalizeScenarioObjectives);
+  enableThermalFallback =
+    turbulenceOptimization.lookupOrDefault<Switch>("enableThermalFallback", enableThermalFallback);
   turbulenceResistanceFactor =
     turbulenceOptimization.lookupOrDefault<scalar>("turbulenceResistanceFactor", turbulenceResistanceFactor);
   turbulenceResistanceCap =
@@ -119,6 +125,20 @@ if (tuneOptParameters.found("turbulenceOptimization"))
     turbulenceOptimization.lookupOrDefault<scalar>("turbulenceLengthScale", turbulenceLengthScale);
   kMinBound = turbulenceOptimization.lookupOrDefault<scalar>("kMinBound", kMinBound);
   epsilonMinBound = turbulenceOptimization.lookupOrDefault<scalar>("epsilonMinBound", epsilonMinBound);
+  thermalFallbackResidualThreshold =
+    turbulenceOptimization.lookupOrDefault<scalar>
+    (
+      "thermalFallbackResidualThreshold",
+      thermalFallbackResidualThreshold
+    );
+  thermalFallbackIterationThreshold =
+    turbulenceOptimization.lookupOrDefault<label>
+    (
+      "thermalFallbackIterationThreshold",
+      thermalFallbackIterationThreshold
+    );
+  thermalFallbackBlend =
+    turbulenceOptimization.lookupOrDefault<scalar>("thermalFallbackBlend", thermalFallbackBlend);
   if (turbulenceOptimization.found("scenarioVelocities"))
   {
     turbulenceOptimization.lookup("scenarioVelocities") >> scenarioVelocities;
@@ -139,6 +159,9 @@ turbulenceIntensity = Foam::max(turbulenceIntensity, scalar(1e-6));
 turbulenceLengthScale = Foam::max(turbulenceLengthScale, scalar(1e-8));
 kMinBound = Foam::max(kMinBound, scalar(1e-14));
 epsilonMinBound = Foam::max(epsilonMinBound, scalar(1e-14));
+thermalFallbackResidualThreshold = Foam::max(thermalFallbackResidualThreshold, scalar(1e-14));
+thermalFallbackIterationThreshold = Foam::max(thermalFallbackIterationThreshold, label(1));
+thermalFallbackBlend = Foam::min(Foam::max(thermalFallbackBlend, scalar(0.0)), scalar(1.0));
 
 if (scenarioVelocities.size() == 0)
 {

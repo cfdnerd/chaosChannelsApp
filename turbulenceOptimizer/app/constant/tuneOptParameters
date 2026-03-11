@@ -65,6 +65,10 @@ turbulenceOptimization
     turbulenceLengthScale        1e-3;
     kMinBound                    1e-10;
     epsilonMinBound              1e-10;
+    enableThermalFallback        yes;
+    thermalFallbackResidualThreshold 1e-7;
+    thermalFallbackIterationThreshold 15000;
+    thermalFallbackBlend         0.3;
 
     scenarioVelocities           (1.0);
     scenarioWeights              (1.0);
