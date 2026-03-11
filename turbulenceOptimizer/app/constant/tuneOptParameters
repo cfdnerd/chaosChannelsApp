@@ -29,8 +29,14 @@ convergenceControl
 continuationControl
 {
     rhoMin                       1e-3;
+    projectionBetaInitial        1.0;
     projectionBetaRate           0.2;
     projectionBetaMax            100;
+    projectionUpdateInterval     5;
+    projectionObjectiveTolForBeta 5e-3;
+    projectionStepTolForBeta     5e-3;
+    projectionConstraintTolForBeta 5e-2;
+    projectionRequireConstraintForBeta yes;
     projectionEtaLower           1e-4;
     projectionEtaUpper           1.0;
     projectionEtaTolerance       1e-4;

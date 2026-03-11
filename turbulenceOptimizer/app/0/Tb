@@ -28,7 +28,16 @@ boundaryField
     outlet
     {
        type             groovyBC;
-       variables "k=DT;h=U&normal();Tinf=0;f=1/(1+k/(h*mag(delta())));";
+       variables
+       "
+         kappaEff=DT;
+         hRaw=(U&normal());
+         hReg=1e-8;
+         deltaN=(mag(delta())+1e-12);
+         hPos=0.5*(hRaw+sqrt(hRaw*hRaw+hReg*hReg));
+         Tinf=0;
+         f=(hPos*deltaN)/(kappaEff + hPos*deltaN);
+       ";
        valueExpression  "Tinf";
        gradientExpression "0";
        fractionExpression "f";

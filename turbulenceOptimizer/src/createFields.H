@@ -57,9 +57,15 @@ scalar optVolumeConstraintWeight
 scalar rhoMin(1e-3);
 scalar projectionBetaRate(0.2);
 scalar projectionBetaMax(100.0);
+scalar projectionBetaInitial(1.0);
 scalar projectionEtaLower(1e-4);
 scalar projectionEtaUpper(1.0);
 scalar projectionEtaTolerance(1e-4);
+label projectionUpdateInterval(5);
+scalar projectionObjectiveTolForBeta(5e-3);
+scalar projectionStepTolForBeta(5e-3);
+scalar projectionConstraintTolForBeta(5e-2);
+Switch projectionRequireConstraintForBeta(true);
 scalar alphaRampDivisor(7.0);
 label alphaRampIterations(63);
 label alphaGrowthStartIteration(100);
@@ -78,9 +84,33 @@ if (tuneOptParameters.found("continuationControl"))
   rhoMin = continuationControl.lookupOrDefault<scalar>("rhoMin", rhoMin);
   projectionBetaRate = continuationControl.lookupOrDefault<scalar>("projectionBetaRate", projectionBetaRate);
   projectionBetaMax = continuationControl.lookupOrDefault<scalar>("projectionBetaMax", projectionBetaMax);
+  projectionBetaInitial =
+    continuationControl.lookupOrDefault<scalar>("projectionBetaInitial", projectionBetaInitial);
   projectionEtaLower = continuationControl.lookupOrDefault<scalar>("projectionEtaLower", projectionEtaLower);
   projectionEtaUpper = continuationControl.lookupOrDefault<scalar>("projectionEtaUpper", projectionEtaUpper);
   projectionEtaTolerance = continuationControl.lookupOrDefault<scalar>("projectionEtaTolerance", projectionEtaTolerance);
+  projectionUpdateInterval =
+    continuationControl.lookupOrDefault<label>("projectionUpdateInterval", projectionUpdateInterval);
+  projectionObjectiveTolForBeta =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionObjectiveTolForBeta",
+      projectionObjectiveTolForBeta
+    );
+  projectionStepTolForBeta =
+    continuationControl.lookupOrDefault<scalar>("projectionStepTolForBeta", projectionStepTolForBeta);
+  projectionConstraintTolForBeta =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionConstraintTolForBeta",
+      projectionConstraintTolForBeta
+    );
+  projectionRequireConstraintForBeta =
+    continuationControl.lookupOrDefault<Switch>
+    (
+      "projectionRequireConstraintForBeta",
+      projectionRequireConstraintForBeta
+    );
   alphaRampDivisor = continuationControl.lookupOrDefault<scalar>("alphaRampDivisor", alphaRampDivisor);
   alphaRampIterations = continuationControl.lookupOrDefault<label>("alphaRampIterations", alphaRampIterations);
   alphaGrowthStartIteration = continuationControl.lookupOrDefault<label>("alphaGrowthStartIteration", alphaGrowthStartIteration);
@@ -97,9 +127,14 @@ if (tuneOptParameters.found("continuationControl"))
     continuationControl.lookupOrDefault<label>("filterRContinuationEnd", filterRContinuationEnd);
 }
 rhoMin = Foam::min(Foam::max(rhoMin, scalar(1e-6)), scalar(0.25));
+projectionBetaInitial = Foam::max(projectionBetaInitial, scalar(1e-6));
 projectionEtaLower = Foam::max(projectionEtaLower, scalar(1e-8));
 projectionEtaUpper = Foam::min(Foam::max(projectionEtaUpper, projectionEtaLower + 1e-6), scalar(1.0));
 projectionEtaTolerance = Foam::max(projectionEtaTolerance, scalar(1e-8));
+projectionUpdateInterval = Foam::max(projectionUpdateInterval, label(1));
+projectionObjectiveTolForBeta = Foam::max(projectionObjectiveTolForBeta, scalar(1e-8));
+projectionStepTolForBeta = Foam::max(projectionStepTolForBeta, scalar(1e-8));
+projectionConstraintTolForBeta = Foam::max(projectionConstraintTolForBeta, scalar(0.0));
 alphaRampDivisor = Foam::max(alphaRampDivisor, scalar(1.0));
 alphaGrowthFactor = Foam::max(alphaGrowthFactor, scalar(1.0));
 quInitial = Foam::max(quInitial, scalar(1e-6));
