@@ -1,2 +1,19 @@
 # Ignore PDF documents
 *.pdf
+# other repo files
+**/linux64GccDPInt32Opt/
+**/processor*/
+**/polyMesh/
+*.log
+**/log
+*.hst
+*.jsonl
+**/solver_diagnostics/*
+CommitPush.sh
+*.html
+*.png
+runLOG
+*.Out
+**/solverLogs/
+*.txt
+**/__pycache__/
