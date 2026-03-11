@@ -1,3 +1,73 @@
+const scalar expectedPrimalCalls =
+  static_cast<scalar>(primalFlowIterations*nVelocityScenarios);
+const scalar expectedAdjointCalls =
+  static_cast<scalar>(adjointFlowIterations*nVelocityScenarios);
+const scalar paCorrectionsPerUa =
+  UaLinearSolveStats.callCount > 0
+    ? static_cast<scalar>(paLinearSolveStats.callCount)
+     /static_cast<scalar>(UaLinearSolveStats.callCount)
+    : 0.0;
+const scalar pbCorrectionsPerUb =
+  UbLinearSolveStats.callCount > 0
+    ? static_cast<scalar>(pbLinearSolveStats.callCount)
+     /static_cast<scalar>(UbLinearSolveStats.callCount)
+    : 0.0;
+
+scalar UaMeanMag(0.0), UaMaxMag(0.0), UbMeanMag(0.0), UbMaxMag(0.0);
+scalar paMean(0.0), paMin(0.0), paMax(0.0), pbMean(0.0), pbMin(0.0), pbMax(0.0);
+scalar TbMean(0.0), TbMin(0.0), TbMax(0.0);
+{
+  auto vectorMagnitudeStats =
+  [&](const volVectorField& field, scalar& meanMagnitude, scalar& maxMagnitude)
+  {
+    const vectorField& internal = field.primitiveField();
+    scalar sumLocal(0.0);
+    scalar maxLocal(0.0);
+    scalar countGlobal = internal.size();
+    forAll(internal, cellI)
+    {
+      const scalar magValue = Foam::mag(internal[cellI]);
+      sumLocal += magValue;
+      maxLocal = Foam::max(maxLocal, magValue);
+    }
+    reduce(sumLocal, sumOp<scalar>());
+    reduce(maxLocal, maxOp<scalar>());
+    reduce(countGlobal, sumOp<scalar>());
+    meanMagnitude = sumLocal/Foam::max(countGlobal, scalar(SMALL));
+    maxMagnitude = maxLocal;
+  };
+
+  auto scalarFieldStats =
+  [&](const volScalarField& field, scalar& meanValue, scalar& minValue, scalar& maxValue)
+  {
+    const scalarField& internal = field.primitiveField();
+    scalar sumLocal(0.0);
+    scalar minLocal(GREAT);
+    scalar maxLocal(-GREAT);
+    scalar countGlobal = internal.size();
+    forAll(internal, cellI)
+    {
+      const scalar value = internal[cellI];
+      sumLocal += value;
+      minLocal = Foam::min(minLocal, value);
+      maxLocal = Foam::max(maxLocal, value);
+    }
+    reduce(sumLocal, sumOp<scalar>());
+    reduce(minLocal, minOp<scalar>());
+    reduce(maxLocal, maxOp<scalar>());
+    reduce(countGlobal, sumOp<scalar>());
+    meanValue = sumLocal/Foam::max(countGlobal, scalar(SMALL));
+    minValue = minLocal;
+    maxValue = maxLocal;
+  };
+
+  vectorMagnitudeStats(Ua, UaMeanMag, UaMaxMag);
+  vectorMagnitudeStats(Ub, UbMeanMag, UbMaxMag);
+  scalarFieldStats(pa, paMean, paMin, paMax);
+  scalarFieldStats(pb, pbMean, pbMin, pbMax);
+  scalarFieldStats(Tb, TbMean, TbMin, TbMax);
+}
+
 if (Pstream::master())
 {
   std::ofstream solverConvergenceLogFile(solverConvergenceFile, std::ios::app);
@@ -105,50 +175,6 @@ if (Pstream::master())
       << "\n";
   };
 
-  auto vectorMagnitudeStats =
-  [&](const volVectorField& field, scalar& meanMagnitude, scalar& maxMagnitude)
-  {
-    const vectorField& internal = field.primitiveField();
-    scalar sumLocal(0.0);
-    scalar maxLocal(0.0);
-    scalar countGlobal = internal.size();
-    forAll(internal, cellI)
-    {
-      const scalar magValue = Foam::mag(internal[cellI]);
-      sumLocal += magValue;
-      maxLocal = Foam::max(maxLocal, magValue);
-    }
-    reduce(sumLocal, sumOp<scalar>());
-    reduce(maxLocal, maxOp<scalar>());
-    reduce(countGlobal, sumOp<scalar>());
-    meanMagnitude = sumLocal/Foam::max(countGlobal, scalar(SMALL));
-    maxMagnitude = maxLocal;
-  };
-
-  auto scalarFieldStats =
-  [&](const volScalarField& field, scalar& meanValue, scalar& minValue, scalar& maxValue)
-  {
-    const scalarField& internal = field.primitiveField();
-    scalar sumLocal(0.0);
-    scalar minLocal(GREAT);
-    scalar maxLocal(-GREAT);
-    scalar countGlobal = internal.size();
-    forAll(internal, cellI)
-    {
-      const scalar value = internal[cellI];
-      sumLocal += value;
-      minLocal = Foam::min(minLocal, value);
-      maxLocal = Foam::max(maxLocal, value);
-    }
-    reduce(sumLocal, sumOp<scalar>());
-    reduce(minLocal, minOp<scalar>());
-    reduce(maxLocal, maxOp<scalar>());
-    reduce(countGlobal, sumOp<scalar>());
-    meanValue = sumLocal/Foam::max(countGlobal, scalar(SMALL));
-    minValue = minLocal;
-    maxValue = maxLocal;
-  };
-
   solverConvergenceLogFile
     << "\n"
     << "=========================================================================================================\n"
@@ -184,30 +210,6 @@ if (Pstream::master())
   writeCorrectionStats("k correction", kTurbulenceCorrectionStats);
   writeCorrectionStats("epsilon correction", epsilonTurbulenceCorrectionStats);
   writeCorrectionStats("nut correction", nutTurbulenceCorrectionStats);
-
-  const scalar expectedPrimalCalls =
-    static_cast<scalar>(primalFlowIterations*nVelocityScenarios);
-  const scalar expectedAdjointCalls =
-    static_cast<scalar>(adjointFlowIterations*nVelocityScenarios);
-  const scalar paCorrectionsPerUa =
-    UaLinearSolveStats.callCount > 0
-      ? static_cast<scalar>(paLinearSolveStats.callCount)
-       /static_cast<scalar>(UaLinearSolveStats.callCount)
-      : 0.0;
-  const scalar pbCorrectionsPerUb =
-    UbLinearSolveStats.callCount > 0
-      ? static_cast<scalar>(pbLinearSolveStats.callCount)
-       /static_cast<scalar>(UbLinearSolveStats.callCount)
-      : 0.0;
-
-  scalar UaMeanMag(0.0), UaMaxMag(0.0), UbMeanMag(0.0), UbMaxMag(0.0);
-  scalar paMean(0.0), paMin(0.0), paMax(0.0), pbMean(0.0), pbMin(0.0), pbMax(0.0);
-  scalar TbMean(0.0), TbMin(0.0), TbMax(0.0);
-  vectorMagnitudeStats(Ua, UaMeanMag, UaMaxMag);
-  vectorMagnitudeStats(Ub, UbMeanMag, UbMaxMag);
-  scalarFieldStats(pa, paMean, paMin, paMax);
-  scalarFieldStats(pb, pbMean, pbMin, pbMax);
-  scalarFieldStats(Tb, TbMean, TbMin, TbMax);
 
   solverConvergenceLogFile
     << "\n"

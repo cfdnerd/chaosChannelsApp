@@ -67,6 +67,18 @@ if (scenarioI == nVelocityScenarios-1)
   }
 
   #include "filter_x.H"
+  if (Pstream::master())
+  {
+    Info<< "post-MMA: entering debug diagnostics" << endl;
+  }
   #include "debugOptimizer.H"
+  if (Pstream::master())
+  {
+    Info<< "post-debug: entering solver convergence logging" << endl;
+  }
   #include "solverConvergenceWrite.H"
+  if (Pstream::master())
+  {
+    Info<< "post-logging: optimizer iteration diagnostics complete" << endl;
+  }
 }
