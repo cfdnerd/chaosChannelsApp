@@ -1,7 +1,7 @@
 const scalar scenarioVelocity = scenarioVelocities[scenarioI];
 const vector scenarioInletVelocity = inletVelocityDirection*scenarioVelocity;
-U.boundaryField()[inletPatchID] == scenarioInletVelocity;
-Ua.boundaryField()[inletPatchID] == scenarioInletVelocity;
+U.boundaryFieldRef()[inletPatchID] = scenarioInletVelocity;
+Ua.boundaryFieldRef()[inletPatchID] = scenarioInletVelocity;
 U.correctBoundaryConditions();
 Ua.correctBoundaryConditions();
 
@@ -20,8 +20,8 @@ if (mesh.foundObject<volScalarField>("k") && mesh.foundObject<volScalarField>("e
       Foam::pow(0.09, 0.75)*Foam::pow(kInlet, 1.5)/turbulenceLengthScale,
       epsilonMinBound
     );
-  kField.boundaryField()[inletPatchID] == kInlet;
-  epsilonField.boundaryField()[inletPatchID] == epsilonInlet;
+  kField.boundaryFieldRef()[inletPatchID] = kInlet;
+  epsilonField.boundaryFieldRef()[inletPatchID] = epsilonInlet;
   kField.max(dimensionedScalar("kMinScenario", kField.dimensions(), kMinBound));
   epsilonField.max
   (

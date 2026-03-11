@@ -1,9 +1,9 @@
-volScalarField adjointNuEff(turbulence->nuEff());
+volScalarField adjointNuEffUb(turbulence->nuEff());
 if (!frozenTurbulenceAdjoint)
 {
-  adjointNuEff = nu;
+  adjointNuEffUb = nu;
 }
-volScalarField alphaEffAdj(alpha*alphaResistanceScale);
+volScalarField alphaEffAdjUb(alpha*alphaResistanceScale);
 
 for(i=0;i<adjointFlowIterations;i++)
 {    
@@ -13,8 +13,8 @@ tmp<fvVectorMatrix> tUbEqn
 (
     fvm::div(-phi, Ub)
   + adjointTransposeConvectionb
-  - fvm::laplacian(adjointNuEff,Ub)
-  + fvm::Sp(alphaEffAdj, Ub)
+  - fvm::laplacian(adjointNuEffUb,Ub)
+  + fvm::Sp(alphaEffAdjUb, Ub)
   + b1*Tb*fvc::grad(T)
  ==
     fvOptions(Ub)
