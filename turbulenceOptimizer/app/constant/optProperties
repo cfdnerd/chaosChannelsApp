@@ -22,7 +22,7 @@ mma_dec             0.7;
 mma_inc             1.2;
 movlim              0.4;
 filterR             2.5;
-PowerDiss0          2.7e-7;
+PowerDiss0          1e-7;
 PowerDissMax        1.20;
 PowerDissRelax      1.60;
 GeoDim              2;
