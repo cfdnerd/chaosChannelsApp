@@ -183,9 +183,9 @@ if (doTurbulenceCorrection)
       }
     }
 
-    kField.correctBoundaryConditions();
-    epsilonField.correctBoundaryConditions();
-    nutField.correctBoundaryConditions();
+    // Do not force turbulence wall-function BC updates here.
+    // k-epsilon wall functions may request transient model fields (e.g. kEpsilon:G)
+    // that are only guaranteed during turbulence->correct().
   }
 
   const volScalarField kAfter(turbulence->k());

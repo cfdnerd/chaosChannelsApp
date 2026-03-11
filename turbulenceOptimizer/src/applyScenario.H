@@ -29,8 +29,6 @@ if (updateTurbulenceInletFromVelocity)
       const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("epsilon"));
     kField.boundaryFieldRef()[inletPatchID] = turbulenceK;
     epsilonField.boundaryFieldRef()[inletPatchID] = turbulenceEpsilon;
-    kField.correctBoundaryConditions();
-    epsilonField.correctBoundaryConditions();
   }
 }
 
