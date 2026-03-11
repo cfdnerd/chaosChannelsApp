@@ -28,9 +28,7 @@ boundaryField
 
     outlet
     {
-        type            inletOutlet;
-        inletValue      uniform 0.0377;
-        value           uniform 0.0377;
+        type            zeroGradient;
     }
 
     Wall
