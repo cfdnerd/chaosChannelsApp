@@ -246,6 +246,13 @@ if (Pstream::master())
     << "[Turbulence And Adjoint Diagnostics]\n"
     << "  Turbulence model          : " << turbulence->type() << "\n"
     << "  turbulenceProMode         : " << (turbulenceProMode ? "true" : "false") << "\n"
+    << "  Pro controls (P/TB/TD/TC/AHC/NFS): "
+    << (projectionNumericalSafeguards ? "1" : "0") << "/"
+    << (enforceTurbulenceBounds ? "1" : "0") << "/"
+    << (enableThermalDivergenceGuard ? "1" : "0") << "/"
+    << (clipTemperatureField ? "1" : "0") << "/"
+    << (enableAdjointHeatSourceClipping ? "1" : "0") << "/"
+    << (enableNonFiniteMetricStop ? "1" : "0") << "\n"
     << "  Turbulence corrector intv : " << turbulenceCorrectorInterval << "\n"
     << "  Primal flow solves        : " << ULinearSolveStats.callCount
     << " / expected ~ " << expectedPrimalCalls << "\n"

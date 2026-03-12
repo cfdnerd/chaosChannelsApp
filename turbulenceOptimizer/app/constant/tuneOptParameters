@@ -32,7 +32,13 @@ normalizeScenarioObjectives      no;   // Normalize MeanT/PDCon using first vali
 
 turbulenceOptimization
 {
-    turbulenceProMode            no;   // Turbulence pro stabilizers toggle
+    turbulenceProMode                 no;  // Master: force-enable all Pro controls below
+    projectionNumericalSafeguards     yes; // Projection eta clamps and non-finite guards
+    enforceTurbulenceBounds           no;  // Clamp k/epsilon/nut to configured bounds
+    enableThermalDivergenceGuard      no;  // Stop when thermal solve becomes unhealthy
+    clipTemperatureField              no;  // Clamp T field to configured min/max
+    enableAdjointHeatSourceClipping   no;  // Clamp adjoint heat source term
+    enableNonFiniteMetricStop         no;  // Stop on non-finite MeanT/PDCon/MaxT
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

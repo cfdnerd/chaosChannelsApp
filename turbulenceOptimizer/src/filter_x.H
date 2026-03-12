@@ -59,22 +59,34 @@ else
       projectionBetaMax
     );
 }
-eta0=Foam::min(Foam::max(projectionEtaLower, projectionEtaEps), scalar(1.0)-projectionEtaEps);
-eta1=Foam::min(Foam::max(projectionEtaUpper, projectionEtaEps), scalar(1.0)-projectionEtaEps);
-if (eta1 <= eta0)
+if (projectionNumericalSafeguards)
 {
-  eta0 = projectionEtaEps;
-  eta1 = scalar(1.0)-projectionEtaEps;
+  eta0=Foam::min(Foam::max(projectionEtaLower, projectionEtaEps), scalar(1.0)-projectionEtaEps);
+  eta1=Foam::min(Foam::max(projectionEtaUpper, projectionEtaEps), scalar(1.0)-projectionEtaEps);
+  if (eta1 <= eta0)
+  {
+    eta0 = projectionEtaEps;
+    eta1 = scalar(1.0)-projectionEtaEps;
+  }
 }
-y0=diff(xp,mesh.V(),del,eta0,n);
+else
+{
+  eta0 = projectionEtaLower;
+  eta1 = projectionEtaUpper;
+}
+y0=diff(xp,mesh.V(),del,eta0,n,projectionNumericalSafeguards);
 reduce(y0, sumOp<scalar>());
-scalar y1=diff(xp,mesh.V(),del,eta1,n);
+scalar y1=diff(xp,mesh.V(),del,eta1,n,projectionNumericalSafeguards);
 reduce(y1, sumOp<scalar>());
 if
 (
-  !std::isfinite(static_cast<double>(del))
- || !std::isfinite(static_cast<double>(y0))
- || !std::isfinite(static_cast<double>(y1))
+  projectionNumericalSafeguards
+  &&
+  (
+    !std::isfinite(static_cast<double>(del))
+   || !std::isfinite(static_cast<double>(y0))
+   || !std::isfinite(static_cast<double>(y1))
+  )
 )
 {
   FatalErrorInFunction
@@ -99,9 +111,9 @@ else
   do
   {
     eta5=(eta0+eta1)/2.0;
-    y5=diff(xp,mesh.V(),del,eta5,n);
+    y5=diff(xp,mesh.V(),del,eta5,n,projectionNumericalSafeguards);
     reduce(y5, sumOp<scalar>());
-    if (!std::isfinite(static_cast<double>(y5)))
+    if (projectionNumericalSafeguards && !std::isfinite(static_cast<double>(y5)))
     {
       FatalErrorInFunction
         << "Non-finite projection root function value at eta5=" << eta5
@@ -121,31 +133,42 @@ else
   } while ((eta1-eta0)>projectionEtaTolerance && projectionEtaIterations < projectionEtaMaxIterations);
 }
 
-eta5 = Foam::min(Foam::max(eta5, projectionEtaEps), scalar(1.0)-projectionEtaEps);
-const scalar etaDenominator = Foam::max(eta5, projectionEtaEps);
-const scalar oneMinusEtaDenominator = Foam::max(scalar(1.0)-eta5, projectionEtaEps);
+const scalar etaProjection =
+  projectionNumericalSafeguards
+  ? Foam::min(Foam::max(eta5, projectionEtaEps), scalar(1.0)-projectionEtaEps)
+  : eta5;
+const scalar etaDenominator =
+  projectionNumericalSafeguards ? Foam::max(etaProjection, projectionEtaEps) : etaProjection;
+const scalar oneMinusEtaDenominator =
+  projectionNumericalSafeguards
+  ? Foam::max(scalar(1.0)-etaProjection, projectionEtaEps)
+  : (scalar(1.0)-etaProjection);
 for(i=0;i<n;i++)
 {
-   const scalar xpClamped = Foam::min(Foam::max(xp[i], scalar(0.0)), scalar(1.0));
-   if(xpClamped<=eta5)
+   const scalar xpProjection =
+     projectionNumericalSafeguards
+     ? Foam::min(Foam::max(xp[i], scalar(0.0)), scalar(1.0))
+     : xp[i];
+   if(xpProjection<=etaProjection)
    {
-     const scalar ratio = xpClamped/etaDenominator;
-     xh[i]=eta5*(Foam::exp(-del*(1-ratio))-(1-ratio)*Foam::exp(-del));
+     const scalar ratio = xpProjection/etaDenominator;
+     xh[i]=etaProjection*(Foam::exp(-del*(1-ratio))-(1-ratio)*Foam::exp(-del));
    }
    else
    {
-     const scalar ratio = (xpClamped-eta5)/oneMinusEtaDenominator;
-     xh[i]=eta5+(1-eta5)*(1-Foam::exp(-del*ratio)+ratio*Foam::exp(-del));
+     const scalar ratio = (xpProjection-etaProjection)/oneMinusEtaDenominator;
+     xh[i]=etaProjection+(1-etaProjection)*(1-Foam::exp(-del*ratio)+ratio*Foam::exp(-del));
    }
-   if (!std::isfinite(static_cast<double>(xh[i])))
+   if (projectionNumericalSafeguards && !std::isfinite(static_cast<double>(xh[i])))
    {
      FatalErrorInFunction
        << "Non-finite xh in projection at cell " << i
        << " (xp=" << xp[i]
-       << ", xpClamped=" << xpClamped
-       << ", eta5=" << eta5
+       << ", xpProjection=" << xpProjection
+       << ", etaProjection=" << etaProjection
        << ", del=" << del << ")"
        << exit(FatalError);
    }
    xh[i]=Foam::min(Foam::max(xh[i],rhoMin),scalar(1.0));
 }
+eta5 = etaProjection;

@@ -21,7 +21,7 @@ reduce(maxTCase, maxOp<scalar>());
 
 if
 (
-  turbulenceProMode
+  enableNonFiniteMetricStop
   &&
   (
     !std::isfinite(static_cast<double>(meanTCase))

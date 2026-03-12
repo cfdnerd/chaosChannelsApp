@@ -40,6 +40,7 @@ Switch test_area(optProperties.lookup("test_area"));
 scalar Pnorm(readScalar(optProperties.lookup("Pnorm")));
 scalar objFunction(readScalar(optProperties.lookup("objFunction")));
 Switch turbulenceProMode(false);
+Switch projectionNumericalSafeguards(true);
 if (tuneOptParameters.found("turbulenceOptimization"))
 {
   const dictionary& turbulenceOptimization = tuneOptParameters.subDict("turbulenceOptimization");

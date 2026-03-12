@@ -2,27 +2,37 @@ gsenshVol.primitiveFieldRef() = 1.0;
 //***********************************//Heaviside_filter
 if(opt>1)
 {
-  const scalar etaSafe = Foam::min(Foam::max(eta5, projectionEtaEps), scalar(1.0)-projectionEtaEps);
-  const scalar etaDenominator = Foam::max(etaSafe, projectionEtaEps);
-  const scalar oneMinusEtaDenominator = Foam::max(scalar(1.0)-etaSafe, projectionEtaEps);
+  const scalar etaProjection =
+    projectionNumericalSafeguards
+    ? Foam::min(Foam::max(eta5, projectionEtaEps), scalar(1.0)-projectionEtaEps)
+    : eta5;
+  const scalar etaDenominator =
+    projectionNumericalSafeguards ? Foam::max(etaProjection, projectionEtaEps) : etaProjection;
+  const scalar oneMinusEtaDenominator =
+    projectionNumericalSafeguards
+    ? Foam::max(scalar(1.0)-etaProjection, projectionEtaEps)
+    : (scalar(1.0)-etaProjection);
   for(i=0;i<n;i++)
   {
-     const scalar xpClamped = Foam::min(Foam::max(xp[i], scalar(0.0)), scalar(1.0));
-     if(xpClamped<=etaSafe)
+     const scalar xpProjection =
+       projectionNumericalSafeguards
+       ? Foam::min(Foam::max(xp[i], scalar(0.0)), scalar(1.0))
+       : xp[i];
+     if(xpProjection<=etaProjection)
      {
-       drho[i]=del*Foam::exp(-del*(1-xpClamped/etaDenominator))+Foam::exp(-del);
+       drho[i]=del*Foam::exp(-del*(1-xpProjection/etaDenominator))+Foam::exp(-del);
      }
      else
      {
-       drho[i]=del*Foam::exp(-del*(xpClamped-etaSafe)/oneMinusEtaDenominator)+Foam::exp(-del);
+       drho[i]=del*Foam::exp(-del*(xpProjection-etaProjection)/oneMinusEtaDenominator)+Foam::exp(-del);
      }
-     if (!std::isfinite(static_cast<double>(drho[i])))
+     if (projectionNumericalSafeguards && !std::isfinite(static_cast<double>(drho[i])))
      {
        FatalErrorInFunction
          << "Non-finite projection derivative at cell " << i
          << " (xp=" << xp[i]
-         << ", xpClamped=" << xpClamped
-         << ", eta=" << etaSafe
+         << ", xpProjection=" << xpProjection
+         << ", etaProjection=" << etaProjection
          << ", del=" << del << ")"
          << exit(FatalError);
      }

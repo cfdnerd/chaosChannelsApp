@@ -63,12 +63,13 @@ label freezeTurbulenceUntilIteration(0);
 Switch useTurbulentResistance(true);
 Switch frozenTurbulenceAdjoint(true);
 Switch enableThermalFallback(true);
-Switch enforceTurbulenceBounds(true);
+Switch enforceTurbulenceBounds(false);
 Switch updateTurbulenceInletFromVelocity(true);
 Switch enableTbBcSmoothingMode(false);
-Switch enableThermalDivergenceGuard(true);
-Switch clipTemperatureField(true);
-Switch enableAdjointHeatSourceClipping(true);
+Switch enableThermalDivergenceGuard(false);
+Switch clipTemperatureField(false);
+Switch enableAdjointHeatSourceClipping(false);
+Switch enableNonFiniteMetricStop(false);
 scalar turbulenceResistanceFactor(1.0);
 scalar turbulenceResistanceCap(100.0);
 scalar turbulenceStatePenaltyFactor(1.0);
@@ -114,9 +115,44 @@ scalar inletSpeed(Foam::max(defaultInletSpeed, scalar(SMALL)));
 if (tuneOptParameters.found("turbulenceOptimization"))
 {
   const dictionary& turbulenceOptimization = tuneOptParameters.subDict("turbulenceOptimization");
-  // Keep only the pro-mode switch configurable from tuneOptParameters.
   turbulenceProMode =
     turbulenceOptimization.lookupOrDefault<Switch>("turbulenceProMode", turbulenceProMode);
+  projectionNumericalSafeguards =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "projectionNumericalSafeguards",
+      projectionNumericalSafeguards
+    );
+  enforceTurbulenceBounds =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "enforceTurbulenceBounds",
+      enforceTurbulenceBounds
+    );
+  enableThermalDivergenceGuard =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "enableThermalDivergenceGuard",
+      enableThermalDivergenceGuard
+    );
+  clipTemperatureField =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "clipTemperatureField",
+      clipTemperatureField
+    );
+  enableAdjointHeatSourceClipping =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "enableAdjointHeatSourceClipping",
+      enableAdjointHeatSourceClipping
+    );
+  enableNonFiniteMetricStop =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "enableNonFiniteMetricStop",
+      enableNonFiniteMetricStop
+    );
 }
 enableTbBcSmoothingMode =
   tuneOptParameters.lookupOrDefault<Switch>
@@ -155,13 +191,15 @@ if (temperatureUpperBound <= temperatureLowerBound)
 adjointHeatSourceClip = Foam::max(adjointHeatSourceClip, scalar(SMALL));
 turbulenceModelCmu = Foam::max(turbulenceModelCmu, scalar(1e-6));
 
-if (!turbulenceProMode)
+if (turbulenceProMode)
 {
-  // Non-publication safety heuristics are centrally gated by turbulenceProMode.
-  enforceTurbulenceBounds = false;
-  enableThermalDivergenceGuard = false;
-  clipTemperatureField = false;
-  enableAdjointHeatSourceClipping = false;
+  // Master switch: force-enable all Pro-mode guards/safeguards.
+  projectionNumericalSafeguards = true;
+  enforceTurbulenceBounds = true;
+  enableThermalDivergenceGuard = true;
+  clipTemperatureField = true;
+  enableAdjointHeatSourceClipping = true;
+  enableNonFiniteMetricStop = true;
 }
 
 volScalarField tbBcSmoothingMode
@@ -182,9 +220,15 @@ tbBcSmoothingMode.correctBoundaryConditions();
 Info<< "Inlet speed [m/s]: " << inletSpeed
     << " with direction " << inletVelocityDirection << endl;
 Info<< "turbulenceProMode: " << (turbulenceProMode ? "on" : "off") << endl;
-Info<< "Heuristic stabilizers: "
-    << (turbulenceProMode ? "enabled" : "disabled")
-    << " (turbulence bounds / clipping / divergence guarding)" << endl;
+Info<< "Pro controls: projectionSafeguards="
+    << (projectionNumericalSafeguards ? "on" : "off")
+    << ", turbulenceBounds=" << (enforceTurbulenceBounds ? "on" : "off")
+    << ", thermalDivergenceGuard=" << (enableThermalDivergenceGuard ? "on" : "off")
+    << ", temperatureClipping=" << (clipTemperatureField ? "on" : "off")
+    << ", adjointHeatSourceClipping=" << (enableAdjointHeatSourceClipping ? "on" : "off")
+    << ", nonFiniteMetricStop=" << (enableNonFiniteMetricStop ? "on" : "off")
+    << (turbulenceProMode ? " (forced by turbulenceProMode)" : " (individually configured)")
+    << endl;
 Info<< "tbBcSmoothingMode: "
     << (enableTbBcSmoothingMode ? "enabled" : "disabled")
     << " (independent toggle)" << endl;
