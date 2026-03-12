@@ -27,7 +27,7 @@ convergenceControl
 }
 
 adaptiveHeavisideProjection      yes;  // Adaptive Heaviside beta continuation
-enableTbBcSmoothingMode          no;   // Activate tbBcSmoothingMode field
+enableTbBcSmoothingMode          yes;   // Activate tbBcSmoothingMode field
 
 turbulenceOptimization
 {
