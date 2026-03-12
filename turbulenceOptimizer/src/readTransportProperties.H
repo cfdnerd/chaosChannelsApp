@@ -66,6 +66,7 @@ Switch normalizeScenarioObjectives(true);
 Switch enableThermalFallback(true);
 Switch enforceTurbulenceBounds(true);
 Switch updateTurbulenceInletFromVelocity(true);
+Switch enableTbBcSmoothingMode(false);
 Switch enableThermalDivergenceGuard(true);
 Switch clipTemperatureField(true);
 Switch enableAdjointHeatSourceClipping(true);
@@ -120,6 +121,12 @@ if (tuneOptParameters.found("turbulenceOptimization"))
   turbulenceProMode =
     turbulenceOptimization.lookupOrDefault<Switch>("turbulenceProMode", turbulenceProMode);
 }
+enableTbBcSmoothingMode =
+  tuneOptParameters.lookupOrDefault<Switch>
+  (
+    "enableTbBcSmoothingMode",
+    enableTbBcSmoothingMode
+  );
 
 primalFlowIterations = Foam::max(primalFlowIterations, label(1));
 adjointFlowIterations = Foam::max(adjointFlowIterations, label(1));
@@ -171,7 +178,7 @@ volScalarField tbBcSmoothingMode
         IOobject::NO_WRITE
     ),
     mesh,
-    dimensionedScalar("tbBcSmoothingMode", dimless, turbulenceProMode ? 1.0 : 0.0),
+    dimensionedScalar("tbBcSmoothingMode", dimless, enableTbBcSmoothingMode ? 1.0 : 0.0),
     zeroGradientFvPatchScalarField::typeName
 );
 tbBcSmoothingMode.correctBoundaryConditions();
@@ -234,6 +241,9 @@ Info<< "turbulenceProMode: " << (turbulenceProMode ? "on" : "off") << endl;
 Info<< "Heuristic stabilizers: "
     << (turbulenceProMode ? "enabled" : "disabled")
     << " (turbulence bounds / clipping / divergence guarding)" << endl;
+Info<< "tbBcSmoothingMode: "
+    << (enableTbBcSmoothingMode ? "enabled" : "disabled")
+    << " (independent toggle)" << endl;
 Info<< "Thermal fallback path: "
     << (enableThermalFallback ? "enabled" : "disabled")
     << " (general, independent of turbulenceProMode)" << endl;

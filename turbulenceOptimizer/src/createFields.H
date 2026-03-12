@@ -46,6 +46,13 @@ if (tuneOptParameters.found("turbulenceOptimization"))
   turbulenceProMode =
     turbulenceOptimization.lookupOrDefault<Switch>("turbulenceProMode", turbulenceProMode);
 }
+Switch adaptiveHeavisideProjection(true);
+adaptiveHeavisideProjection =
+  tuneOptParameters.lookupOrDefault<Switch>
+  (
+    "adaptiveHeavisideProjection",
+    adaptiveHeavisideProjection
+  );
 const dictionary& convergenceControl = tuneOptParameters.subDict("convergenceControl");
 label optMinIterations(convergenceControl.lookupOrDefault<label>("optMinIterations", 50));
 label optStallWindow(convergenceControl.lookupOrDefault<label>("optStallWindow", 5));

@@ -26,10 +26,12 @@ convergenceControl
     optVolumeConstraintWeight    1.0;
 }
 
+adaptiveHeavisideProjection      yes;  // Adaptive Heaviside beta continuation
+enableTbBcSmoothingMode          no;   // Activate tbBcSmoothingMode field
+
 turbulenceOptimization
 {
-    // Single runtime toggle; all other turbulence/continuation tuning is hardcoded in source.
-    turbulenceProMode            no;
+    turbulenceProMode            no;   // Turbulence pro stabilizers toggle
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
