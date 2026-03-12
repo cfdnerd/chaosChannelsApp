@@ -45,8 +45,7 @@ const scalar tighteningIterations =
   scalar(Foam::max(opt - powerConstraintTighteningStartIteration, label(0)));
 const scalar powerConstraintDenominatorRaw =
   Foam::max(PowerDissRelax - powerConstraintTighteningRate*tighteningIterations, PowerDissMax);
-const scalar powerConstraintDenominator =
-  powerConstraintDenominatorRaw/Foam::max(powerConstraintReference, scalar(SMALL));
+const scalar powerConstraintDenominator = powerConstraintDenominatorRaw;
 const scalar weightedPowerConstraint =
   optPowerConstraintWeight*(powerConstraintNormalized/powerConstraintDenominator-1.0);
 const scalar weightedVolumeConstraint = optVolumeConstraintWeight*V;

@@ -84,8 +84,8 @@ scalar projectionEtaTolerance(1e-4);
 label projectionUpdateInterval(5);
 scalar projectionObjectiveTolForBeta(5e-3);
 scalar projectionStepTolForBeta(5e-3);
-label powerConstraintTighteningStartIteration(20);
-scalar powerConstraintTighteningRate(0.02);
+label powerConstraintTighteningStartIteration(0);
+scalar powerConstraintTighteningRate(0.2);
 scalar alphaRampDivisor(7.0);
 label alphaRampIterations(63);
 label alphaGrowthStartIteration(100);
@@ -114,7 +114,7 @@ projectionStepTolForBeta =
     scalar(0.02)*Foam::max(Foam::mag(movlim), scalar(1e-6))
   );
 powerConstraintTighteningStartIteration =
-  Foam::max(powerConstraintTighteningStartIteration, label(1));
+  Foam::max(powerConstraintTighteningStartIteration, label(0));
 powerConstraintTighteningRate = Foam::max(powerConstraintTighteningRate, scalar(0.0));
 alphaRampDivisor = Foam::max(alphaRampDivisor, scalar(1.0));
 alphaGrowthFactor = Foam::max(alphaGrowthFactor, scalar(1.0));

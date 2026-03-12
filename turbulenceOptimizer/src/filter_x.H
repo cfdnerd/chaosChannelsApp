@@ -50,8 +50,8 @@ if (adaptiveHeavisideProjection)
 }
 else
 {
-  // Adaptive continuation disabled: keep a fixed projection beta.
-  del = projectionBetaInitial;
+  // Legacy non-adaptive continuation: deterministic linear beta ramp.
+  del = Foam::min(projectionBetaRate*opt, projectionBetaMax);
 }
 eta0=projectionEtaLower;
 eta1=projectionEtaUpper;
