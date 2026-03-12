@@ -53,24 +53,24 @@ maxT = maxTCase;
 
 if (normalizeScenarioObjectives)
 {
-  if (!objectiveIterationOneReferenceCaptured && opt == 1)
+  if (!objectiveIterationOneReferenceCaptured)
   {
     objectiveIterationOneReference = Foam::max(Foam::mag(meanTCase), scalar(SMALL));
     objectiveIterationOneReferenceCaptured = true;
     if (Pstream::master())
     {
-      Info<< "Captured objective iteration-1 normalization reference: "
-          << objectiveIterationOneReference << endl;
+      Info<< "Captured objective normalization reference at iteration " << opt
+          << ": " << objectiveIterationOneReference << endl;
     }
   }
-  if (!powerIterationOneReferenceCaptured && opt == 1)
+  if (!powerIterationOneReferenceCaptured)
   {
     powerIterationOneReference = Foam::max(Foam::mag(powerDissCase), scalar(SMALL));
     powerIterationOneReferenceCaptured = true;
     if (Pstream::master())
     {
-      Info<< "Captured power iteration-1 normalization reference: "
-          << powerIterationOneReference << endl;
+      Info<< "Captured power normalization reference at iteration " << opt
+          << ": " << powerIterationOneReference << endl;
     }
   }
   const scalar objectiveReference =
@@ -88,7 +88,7 @@ if (normalizeScenarioObjectives)
 objectiveNormalized = MeanT;
 powerConstraintNormalized = PowerDiss;
 PD0Sug = PowerDiss0;
-if (!normalizeScenarioObjectives)
+if (historyWritePD0Sug)
 {
   if
   (
@@ -117,7 +117,7 @@ if (Pstream::master())
      << std::scientific << std::setprecision(8)
      << std::setw(16) << PowerDissActual
      << std::setw(16) << powerConstraintNormalized;
-   if (!normalizeScenarioObjectives)
+   if (historyWritePD0Sug)
    {
      historyFile << std::setw(16) << PD0Sug;
    }

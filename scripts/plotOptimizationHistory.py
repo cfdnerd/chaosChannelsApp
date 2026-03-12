@@ -36,6 +36,9 @@ def parse_history(path: Path) -> Tuple[List[str], List[List[float]]]:
                 continue
 
             if parts[0] == "Iter":
+                # If schema changes inside one file, keep only the latest schema block.
+                if header and header != parts:
+                    rows_by_iter.clear()
                 header = parts
                 continue
 
@@ -47,6 +50,8 @@ def parse_history(path: Path) -> Tuple[List[str], List[List[float]]]:
             if len(parts) < expected:
                 # Likely an in-progress write; skip partial line.
                 continue
+            if len(parts) > expected:
+                parts = parts[:expected]
 
             try:
                 it = int(float(parts[0]))

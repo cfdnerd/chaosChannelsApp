@@ -28,7 +28,7 @@ convergenceControl
 
 adaptiveHeavisideProjection      no;   // Adaptive Heaviside beta continuation
 enableTbBcSmoothingMode          yes;   // Activate tbBcSmoothingMode field
-normalizeScenarioObjectives      no;   // Normalize objective using iteration-1 value
+normalizeScenarioObjectives      no;   // Normalize MeanT/PDCon using first valid iteration
 
 turbulenceOptimization
 {

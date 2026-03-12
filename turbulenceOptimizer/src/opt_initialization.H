@@ -3,6 +3,7 @@ const char* optimizationHistoryFile = "optimization.hst";
 const char* debugOptimizerJsonFile = "debugOptimizer.jsonl";
 const char* debugOptimizerLogFile = "debugOptimizer.log";
 const char* solverConvergenceFile = "solverConvergences.log";
+const bool historyWritePD0Sug(!normalizeScenarioObjectives);
 if (Pstream::master())
 {
   std::remove(optimizationHistoryFile);
@@ -11,13 +12,13 @@ if (Pstream::master())
   std::remove(solverConvergenceFile);
   std::ofstream historyFile(optimizationHistoryFile, std::ios::out);
   historyFile << "# MTO_ThermalFluid optimization history\n";
-  if (normalizeScenarioObjectives)
+  if (!historyWritePD0Sug)
   {
     historyFile
       << "# Cols: Iter PDAct PDCon V MeanT MaxT\n"
       << "# PDAct=PowerDissActual physical-scale pumping power metric\n"
-      << "# PDCon=power constraint value used by MMA (iteration-1 normalized)\n"
-      << "# MeanT=objective value used by MMA (iteration-1 normalized)\n"
+      << "# PDCon=power constraint value used by MMA (first valid-iteration normalized)\n"
+      << "# MeanT=objective value used by MMA (first valid-iteration normalized)\n"
       << "# PD0Sug logging disabled when normalizeScenarioObjectives is enabled\n"
       << std::left
       << std::setw(8) << "Iter"

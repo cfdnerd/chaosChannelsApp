@@ -139,7 +139,7 @@ if (optVolumeConstraintWeight <= 0.0)
 }
 Info<< "normalizeScenarioObjectives: "
     << (normalizeScenarioObjectives ? "enabled" : "disabled")
-    << " (iteration-1 fixed objective scaling)" << endl;
+    << " (first valid-iteration fixed MeanT/PDCon scaling)" << endl;
 Info<< "Reading pseudo-density field\n" << endl;
 volScalarField xp
 (
