@@ -15,7 +15,7 @@ Observed validated principles:
 - Use variable-density topology parameterization with PDE filtering and projection continuation.
 - Couple design variable to fluid properties in RANS momentum + turbulence transport equations.
 - Optimize multi-objective thermal/hydraulic metrics, then re-evaluate selected designs in higher-fidelity CFD.
-- Include robust multi-velocity sensitivity/aggregation if operating envelope varies.
+- Cover operating envelope by running separate single-velocity optimization cases.
 - Keep turbulent boundary layer representation pragmatic; dense local channels should be checked against mesh and model limitations.
 
 ## 3) Target mathematical formulation
@@ -45,9 +45,10 @@ Observed validated principles:
 - Core combined objectives:
   - Minimize thermal metric (mean or max wall/solid temperature).
   - Minimize pressure-drop or pumping-power metric.
-- Multi-scenario objective for inlet envelope:
-  - `U_in in {1, 2, 3} m/s`
-  - Weighted sum or p-norm scenario aggregation.
+- Velocity-envelope coverage strategy:
+  - Run one inlet velocity per optimization case.
+  - Use a case set spanning `U_in in [1, 3] m/s` (for example: 1, 2, 3 m/s).
+  - Compare selected designs across the case set in post-processing.
 
 ## 4) Numerical robustness and stability plan
 
@@ -95,11 +96,12 @@ Observed validated principles:
   - Turbulence state is fixed while accumulated sensitivities are computed.
 - Validate descent-direction quality on reduced meshes first.
 
-### Phase 4 — Multi-scenario objective and continuation
-- Add multi-velocity scenario handling in objective accumulation.
+### Phase 4 — Continuation and case sweep
+- Keep objective accumulation single-case (one inlet velocity per run).
+- Add run scripts/case templates for inlet-velocity sweep up to 3 m/s.
 - Add continuation schedule:
   - SIMP exponent, projection beta, and filter radius schedules.
-- Add objective normalization across speeds.
+- Keep normalization and constraints consistent within each single case.
 
 ### Phase 5 — Validation and trust checks
 - Stage A: optimizer-level checks
@@ -154,7 +156,7 @@ Observed validated principles:
 - Turbulence-model mismatch in tiny channels
   - Validate against alternate RANS model in Stage B.
 - Overfit to a single Reynolds state
-  - Use scenario aggregation at start.
+  - Run and compare separate cases over the inlet-velocity range.
 
 ## 9) Implementation checklist
 
@@ -162,10 +164,11 @@ Observed validated principles:
 2. Activate RANS dictionaries and fields.
 3. Validate forward RANS on fixed topology.
 4. Integrate design coupling into momentum source and `nuEff` usage.
-5. Add multi-scenario objective aggregation.
+5. Keep objective/constraint evaluation single-case per run.
 6. Add continuation and projection tuning inputs.
-7. Lock hyperparameters after 2-3 verification loops.
-8. Run post-optimization high-fidelity re-evaluations.
+7. Add case sweep scripts/templates for 1-3 m/s runs.
+8. Lock hyperparameters after 2-3 verification loops.
+9. Run post-optimization high-fidelity re-evaluations.
 
 ## 10) Reference corpus for verification and cross-checking
 

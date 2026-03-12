@@ -1,37 +1,34 @@
 Info<<"cost function"<<endl;
-if (scenarioI == 0)
-{
-  MeanT=0;
-  PowerDiss=0;
-  MeanTPhysical=0;
-  PowerDissPhysical=0;
-  maxT=-GREAT;
-  V=fvc::domainIntegrate(xh).value()/area-(voluse+0*Foam::max(0,0.5-opt*0.015));
-}
+MeanT=0;
+PowerDiss=0;
+MeanTPhysical=0;
+PowerDissPhysical=0;
+maxT=-GREAT;
+V=fvc::domainIntegrate(xh).value()/area-(voluse+0*Foam::max(0,0.5-opt*0.015));
 
-scalar scenarioMeanT = fvc::domainIntegrate(T).value()/area;
-scalar scenarioPowerDiss = 0;
+scalar meanTCase = fvc::domainIntegrate(T).value()/area;
+scalar powerDissCase = 0;
 for (i=0; i<nObjPatch; i++)
 {
-     scenarioPowerDiss =scenarioPowerDiss - sum(
+     powerDissCase =powerDissCase - sum(
      phi.boundaryField()[conPatchList[i]]*(p.boundaryField()[conPatchList[i]]
      + 0.5*magSqr(U.boundaryField()[conPatchList[i]])));
 }
-scenarioPowerDiss=scenarioPowerDiss/PowerDiss0;
-reduce(scenarioPowerDiss, sumOp<scalar>());
-scalar scenarioMaxT = gMax(T);
-reduce(scenarioMaxT, maxOp<scalar>());
+powerDissCase=powerDissCase/PowerDiss0;
+reduce(powerDissCase, sumOp<scalar>());
+scalar maxTCase = gMax(T);
+reduce(maxTCase, maxOp<scalar>());
 
 if
 (
   turbulenceProMode
   &&
   (
-    !std::isfinite(static_cast<double>(scenarioMeanT))
+    !std::isfinite(static_cast<double>(meanTCase))
     ||
-    !std::isfinite(static_cast<double>(scenarioPowerDiss))
+    !std::isfinite(static_cast<double>(powerDissCase))
     ||
-    !std::isfinite(static_cast<double>(scenarioMaxT))
+    !std::isfinite(static_cast<double>(maxTCase))
   )
 )
 {
@@ -41,89 +38,53 @@ if
   {
     WarningInFunction
       << "Detected non-finite cost metrics at optimizer iteration " << opt
-      << " (scenario " << scenarioI + 1 << ")."
-      << " MeanT=" << scenarioMeanT
-      << ", Power=" << scenarioPowerDiss
-      << ", MaxT=" << scenarioMaxT
+      << ". MeanT=" << meanTCase
+      << ", Power=" << powerDissCase
+      << ", MaxT=" << maxTCase
       << endl;
   }
 }
 
-scenarioMeanTLast[scenarioI] = scenarioMeanT;
-scenarioPowerLast[scenarioI] = scenarioPowerDiss;
-scenarioMaxTLast[scenarioI] = scenarioMaxT;
+MeanT = meanTCase;
+PowerDiss = powerDissCase;
+MeanTPhysical = meanTCase;
+PowerDissPhysical = powerDissCase;
+maxT = maxTCase;
 
-if (!normalizeScenarioObjectives)
+objectiveNormalized = MeanT;
+powerConstraintNormalized = PowerDiss;
+PD0Sug = PowerDiss0;
+if
+(
+  powerConstraintNormalized > PowerDissRelax
+  &&
+  PowerDissMax > SMALL
+)
 {
-  scenarioThermalReference[scenarioI] = 1.0;
-  scenarioPowerReference[scenarioI] = 1.0;
+  PD0Sug =
+    PowerDiss0
+   *(
+      powerConstraintNormalized
+     /Foam::max(PowerDissMax, scalar(SMALL))
+    );
 }
-if (scenarioThermalReference[scenarioI] <= SMALL)
+
+PowerDissActualOverBase = PowerDissPhysical;
+PowerDissActual = PowerDissActualOverBase*PowerDiss0;
+
+if (Pstream::master())
 {
-  scenarioThermalReference[scenarioI] = Foam::max(Foam::mag(scenarioMeanT), scalar(SMALL));
-}
-if (scenarioPowerReference[scenarioI] <= SMALL)
-{
-  scenarioPowerReference[scenarioI] = Foam::max(Foam::mag(scenarioPowerDiss), scalar(SMALL));
-}
-
-const scalar scenarioMeanTNormalized =
-  scenarioMeanT/Foam::max(scenarioThermalReference[scenarioI], scalar(SMALL));
-const scalar scenarioPowerNormalized =
-  scenarioPowerDiss/Foam::max(scenarioPowerReference[scenarioI], scalar(SMALL));
-scenarioObjectiveNormalizedLast[scenarioI] = scenarioMeanTNormalized;
-scenarioPowerNormalizedLast[scenarioI] = scenarioPowerNormalized;
-
-const scalar scenarioWeight = scenarioWeights[scenarioI];
-MeanT += scenarioWeight*scenarioMeanTNormalized;
-PowerDiss += scenarioWeight*scenarioPowerNormalized;
-MeanTPhysical += scenarioWeight*scenarioMeanT;
-PowerDissPhysical += scenarioWeight*scenarioPowerDiss;
-maxT = Foam::max(maxT, scenarioMaxT);
-
-if (scenarioI == nVelocityScenarios-1)
-{
-  objectiveNormalized = MeanT;
-  powerConstraintNormalized = PowerDiss;
-  PD0Sug = PowerDiss0;
-  if
-  (
-    !normalizeScenarioObjectives
-    &&
-    powerConstraintNormalized > PowerDissRelax
-    &&
-    PowerDissMax > SMALL
-  )
-  {
-    PD0Sug =
-      PowerDiss0
-     *(
-        powerConstraintNormalized
-       /Foam::max(PowerDissMax, scalar(SMALL))
-      );
-  }
-
-  PowerDissActualOverBase = PowerDissPhysical;
-  PowerDissActual = PowerDissActualOverBase*PowerDiss0;
-
-  if (Pstream::master())
-  {
-     std::ofstream historyFile(optimizationHistoryFile, std::ios::app);
-     historyFile
-       << std::right
-       << std::setw(8) << opt
-       << std::scientific << std::setprecision(8)
-       << std::setw(16) << PowerDissActual
-       << std::setw(16) << powerConstraintNormalized;
-     if (!normalizeScenarioObjectives)
-     {
-       historyFile << std::setw(16) << PD0Sug;
-     }
-     historyFile
-       << std::setw(16) << V
-       << std::setw(16) << objectiveNormalized
-       << std::setw(16) << maxT
-       << '\n';
-     historyFile.flush();
-  }
+   std::ofstream historyFile(optimizationHistoryFile, std::ios::app);
+   historyFile
+     << std::right
+     << std::setw(8) << opt
+     << std::scientific << std::setprecision(8)
+     << std::setw(16) << PowerDissActual
+     << std::setw(16) << powerConstraintNormalized
+     << std::setw(16) << PD0Sug
+     << std::setw(16) << V
+     << std::setw(16) << objectiveNormalized
+     << std::setw(16) << maxT
+     << '\n';
+   historyFile.flush();
 }

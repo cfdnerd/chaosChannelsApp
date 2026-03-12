@@ -50,7 +50,8 @@ if (adaptiveHeavisideProjection)
 }
 else
 {
-  del = Foam::min(projectionBetaRate*opt, projectionBetaMax);
+  // Adaptive continuation disabled: keep a fixed projection beta.
+  del = projectionBetaInitial;
 }
 eta0=projectionEtaLower;
 eta1=projectionEtaUpper;

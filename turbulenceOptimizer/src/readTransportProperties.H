@@ -62,7 +62,6 @@ label turbulenceCorrectorInterval(1);
 label freezeTurbulenceUntilIteration(0);
 Switch useTurbulentResistance(true);
 Switch frozenTurbulenceAdjoint(true);
-Switch normalizeScenarioObjectives(true);
 Switch enableThermalFallback(true);
 Switch enforceTurbulenceBounds(true);
 Switch updateTurbulenceInletFromVelocity(true);
@@ -96,7 +95,7 @@ label inletPatchID(mesh.boundaryMesh().findPatchID("inlet"));
 if (inletPatchID < 0)
 {
   FatalErrorInFunction
-    << "Missing required patch 'inlet' for multi-scenario setup."
+    << "Missing required patch 'inlet' for single-case setup."
     << exit(FatalError);
 }
 vector inletVelocityDirection(0, -1, 0);
@@ -111,9 +110,7 @@ if (U.boundaryField()[inletPatchID].size() > 0)
     inletVelocityDirection = inletVelocitySample/inletSpeedSample;
   }
 }
-
-scalarList scenarioVelocities(1, defaultInletSpeed);
-scalarList scenarioWeights(1, 1.0);
+scalar inletSpeed(Foam::max(defaultInletSpeed, scalar(SMALL)));
 if (tuneOptParameters.found("turbulenceOptimization"))
 {
   const dictionary& turbulenceOptimization = tuneOptParameters.subDict("turbulenceOptimization");
@@ -182,61 +179,8 @@ volScalarField tbBcSmoothingMode
     zeroGradientFvPatchScalarField::typeName
 );
 tbBcSmoothingMode.correctBoundaryConditions();
-
-if (scenarioVelocities.size() == 0)
-{
-  scenarioVelocities.setSize(1);
-  scenarioVelocities[0] = defaultInletSpeed;
-}
-forAll(scenarioVelocities, sI)
-{
-  scenarioVelocities[sI] = Foam::max(scenarioVelocities[sI], scalar(SMALL));
-}
-if (scenarioWeights.size() != scenarioVelocities.size())
-{
-  if (scenarioWeights.size() == 1)
-  {
-    scenarioWeights.setSize(scenarioVelocities.size());
-    forAll(scenarioWeights, sI)
-    {
-      scenarioWeights[sI] = 1.0;
-    }
-  }
-  else
-  {
-    FatalErrorInFunction
-      << "scenarioWeights size (" << scenarioWeights.size()
-      << ") must match scenarioVelocities size (" << scenarioVelocities.size()
-      << ") or be omitted."
-      << exit(FatalError);
-  }
-}
-scalar scenarioWeightSum(0.0);
-forAll(scenarioWeights, sI)
-{
-  scenarioWeights[sI] = Foam::max(scenarioWeights[sI], scalar(0.0));
-  scenarioWeightSum += scenarioWeights[sI];
-}
-if (scenarioWeightSum <= SMALL)
-{
-  scenarioWeightSum = scenarioWeights.size();
-  forAll(scenarioWeights, sI)
-  {
-    scenarioWeights[sI] = 1.0;
-  }
-}
-forAll(scenarioWeights, sI)
-{
-  scenarioWeights[sI] /= scenarioWeightSum;
-}
-const label nVelocityScenarios(scenarioVelocities.size());
-scalarList scenarioThermalReference(nVelocityScenarios, -1.0);
-scalarList scenarioPowerReference(nVelocityScenarios, -1.0);
-scalarList scenarioMeanTLast(nVelocityScenarios, 0.0);
-scalarList scenarioPowerLast(nVelocityScenarios, 0.0);
-scalarList scenarioMaxTLast(nVelocityScenarios, 0.0);
-Info<< "Velocity scenarios [m/s]: " << scenarioVelocities
-    << ", normalized weights: " << scenarioWeights << endl;
+Info<< "Inlet speed [m/s]: " << inletSpeed
+    << " with direction " << inletVelocityDirection << endl;
 Info<< "turbulenceProMode: " << (turbulenceProMode ? "on" : "off") << endl;
 Info<< "Heuristic stabilizers: "
     << (turbulenceProMode ? "enabled" : "disabled")

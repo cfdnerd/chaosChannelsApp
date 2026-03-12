@@ -46,7 +46,7 @@ if (tuneOptParameters.found("turbulenceOptimization"))
   turbulenceProMode =
     turbulenceOptimization.lookupOrDefault<Switch>("turbulenceProMode", turbulenceProMode);
 }
-Switch adaptiveHeavisideProjection(true);
+Switch adaptiveHeavisideProjection(false);
 adaptiveHeavisideProjection =
   tuneOptParameters.lookupOrDefault<Switch>
   (

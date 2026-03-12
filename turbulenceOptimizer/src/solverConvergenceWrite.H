@@ -1,7 +1,7 @@
 const scalar expectedPrimalCalls =
-  static_cast<scalar>(primalFlowIterations*nVelocityScenarios);
+  static_cast<scalar>(primalFlowIterations);
 const scalar expectedAdjointCalls =
-  static_cast<scalar>(adjointFlowIterations*nVelocityScenarios);
+  static_cast<scalar>(adjointFlowIterations);
 const scalar paCorrectionsPerUa =
   UaLinearSolveStats.callCount > 0
     ? static_cast<scalar>(paLinearSolveStats.callCount)

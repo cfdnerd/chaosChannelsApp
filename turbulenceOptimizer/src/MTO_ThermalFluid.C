@@ -26,29 +26,26 @@ int main(int argc, char *argv[])
     {
         #include "solverConvergenceReset.H"
         #include "update.H"
-        for (label scenarioI = 0; scenarioI < nVelocityScenarios; ++scenarioI)
+        #include "applyInletCase.H"
+        #include "Primal_U.H"
+        if (stopOptimization)
         {
-            #include "applyScenario.H"
-            #include "Primal_U.H"
-            if (stopOptimization)
-            {
-                break;
-            }
-            #include "Primal_T.H"
-            if (stopOptimization)
-            {
-                break;
-            }
-            #include "AdjointHeat_Tb.H"
-            #include "AdjointHeat_Ub.H"
-            #include "AdjointFlow_Ua.H"
-            #include "costfunction.H"
-            if (stopOptimization)
-            {
-                break;
-            }
-            #include "sensitivity.H"
+            break;
         }
+        #include "Primal_T.H"
+        if (stopOptimization)
+        {
+            break;
+        }
+        #include "AdjointHeat_Tb.H"
+        #include "AdjointHeat_Ub.H"
+        #include "AdjointFlow_Ua.H"
+        #include "costfunction.H"
+        if (stopOptimization)
+        {
+            break;
+        }
+        #include "sensitivity.H"
         runTime.write();
         if (stopOptimization)
         {
