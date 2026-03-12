@@ -10,7 +10,6 @@ recordLinearSolve
   xpFilterLinearSolvePerformance.nIterations()
 );
 //***********************************//Heaviside_filter
-if (turbulenceProMode)
 {
   scalar maxAbsXStepForProjectionLocal(0.0);
   for(i=0;i<n;i++)
@@ -58,10 +57,6 @@ if (turbulenceProMode)
   {
     del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
   }
-}
-else
-{
-  del = Foam::min(projectionBetaRate*opt, projectionBetaMax);
 }
 eta0=projectionEtaLower;
 eta1=projectionEtaUpper;

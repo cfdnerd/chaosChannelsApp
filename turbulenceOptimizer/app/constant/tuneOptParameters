@@ -26,78 +26,10 @@ convergenceControl
     optVolumeConstraintWeight    1.0;
 }
 
-continuationControl
-{
-    rhoMin                       1e-3;
-    projectionBetaInitial        1.0;
-    projectionBetaRate           0.2;
-    projectionBetaMax            100;
-    projectionUpdateInterval     5;
-    projectionObjectiveTolForBeta 5e-3;
-    projectionStepTolForBeta     5e-3;
-    projectionConstraintTolForBeta 5e-2;
-    projectionRequireConstraintForBeta yes;
-    projectionEtaLower           1e-4;
-    projectionEtaUpper           1.0;
-    projectionEtaTolerance       1e-4;
-
-    alphaRampDivisor             7.0;
-    alphaRampIterations          63;
-    alphaGrowthStartIteration    100;
-    alphaGrowthFactor            1.05;
-
-    quInitial                    0.005;
-    quRampStartIteration         80;
-    quGrowthRate                 1e-4;
-    quMax                        0.01;
-
-    filterRStart                 2.5;
-    filterREnd                   2.0;
-    filterRContinuationStart     30;
-    filterRContinuationEnd       220;
-}
-
 turbulenceOptimization
 {
-    // Master toggle for non-publication safety heuristics (clips/guards/fallback hardening).
+    // Single runtime toggle; all other turbulence/continuation tuning is hardcoded in source.
     turbulenceProMode            no;
-    primalFlowIterations         60;
-    adjointFlowIterations        40;
-    turbulenceCorrectorInterval  1;
-    freezeTurbulenceUntilIteration 3;
-    frozenTurbulenceAdjoint      yes;
-    useTurbulentResistance       yes;
-    turbulenceResistanceFactor   1.0;
-    turbulenceResistanceCap      100;
-    turbulenceStatePenaltyFactor 1.0;
-    turbulenceIntensity          0.05;
-    turbulenceLengthScale        1e-3;
-    turbulenceModelCmu           0.09;
-    updateTurbulenceInletFromVelocity yes;
-    enforceTurbulenceBounds      yes;
-    kMinBound                    1e-10;
-    epsilonMinBound              1e-10;
-    kMaxBound                    1e4;
-    epsilonMaxBound              1e8;
-    nutMaxBound                  1e3;
-    enableThermalFallback        yes;
-    thermalFallbackResidualThreshold 1e-7;
-    thermalFallbackIterationThreshold 15000;
-    thermalFallbackBlend         0.3;
-    thermalFallbackMaxAttempts   2;
-    thermalFallbackDiffusivityFactor 3.0;
-    thermalUnderRelaxation       0.7;
-    enableThermalDivergenceGuard yes;
-    thermalFieldAbsMax           1e6;
-    clipTemperatureField         yes;
-    temperatureLowerBound        -1000;
-    temperatureUpperBound        1000;
-    enableAdjointHeatSourceClipping yes;
-    adjointHeatSourceClip        1e4;
-
-    scenarioVelocities           (1.0);
-    scenarioWeights              (1.0);
-    normalizeScenarioObjectives  yes;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
