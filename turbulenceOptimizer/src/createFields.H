@@ -79,12 +79,13 @@ scalar rhoMin(1e-3);
 scalar projectionBetaRate(0.2);
 scalar projectionBetaMax(100.0);
 scalar projectionBetaInitial(1.0);
-scalar projectionBetaGrowthFactor(1.5);
+scalar projectionBetaGrowthFactor(1.25);
 scalar projectionEtaLower(1e-4);
 scalar projectionEtaUpper(1.0);
 scalar projectionEtaTolerance(1e-4);
 scalar projectionEtaEps(1e-6);
 label projectionUpdateInterval(25);
+label projectionStartIteration(75);
 scalar projectionObjectiveTolForBeta(5e-3);
 scalar projectionStepTolForBeta(5e-3);
 scalar projectionConstraintViolationTolForBeta(0.1);
@@ -133,6 +134,7 @@ if (projectionEtaUpper <= projectionEtaLower)
 }
 projectionEtaTolerance = Foam::max(projectionEtaTolerance, scalar(1e-8));
 projectionUpdateInterval = Foam::max(projectionUpdateInterval, label(1));
+projectionStartIteration = Foam::max(projectionStartIteration, label(1));
 projectionObjectiveTolForBeta = Foam::max(projectionObjectiveTolForBeta, scalar(1e-8));
 projectionStepTolForBeta = Foam::max(projectionStepTolForBeta, scalar(1e-8));
 projectionConstraintViolationTolForBeta =
@@ -169,30 +171,6 @@ mmaConstraintDampingMin =
   Foam::min(Foam::max(mmaConstraintDampingMin, scalar(1e-3)), scalar(1.0));
 mmaConstraintDampingActivation =
   Foam::max(mmaConstraintDampingActivation, scalar(0.0));
-
-if (!normalizeScenarioObjectives)
-{
-  // app mode profile (normalizeScenarioObjectives=no): keep evolution active.
-  projectionBetaGrowthFactor = Foam::min(projectionBetaGrowthFactor, scalar(1.25));
-  projectionConstraintViolationTolForBeta = 1.0;
-  continuationConstraintViolationFreeze = 1.0;
-  continuationBlendFast = 0.35;
-  continuationBlendSlow = 0.15;
-  mmaConstraintDampingGain = 0.35;
-  mmaConstraintDampingMin = 0.60;
-  mmaConstraintDampingActivation = 0.60;
-}
-else
-{
-  // nso mode profile (normalizeScenarioObjectives=yes): conservative stabilization.
-  projectionConstraintViolationTolForBeta = Foam::min(projectionConstraintViolationTolForBeta, scalar(0.1));
-  continuationConstraintViolationFreeze = Foam::min(continuationConstraintViolationFreeze, scalar(0.1));
-  continuationBlendFast = Foam::min(continuationBlendFast, scalar(0.25));
-  continuationBlendSlow = Foam::min(continuationBlendSlow, scalar(0.05));
-  mmaConstraintDampingGain = Foam::max(mmaConstraintDampingGain, scalar(1.5));
-  mmaConstraintDampingMin = Foam::max(mmaConstraintDampingMin, scalar(0.3));
-  mmaConstraintDampingActivation = Foam::min(mmaConstraintDampingActivation, scalar(0.3));
-}
 filterRStart = Foam::max(filterRStart, scalar(1e-6));
 filterREnd = Foam::max(filterREnd, scalar(1e-6));
 if (optPowerConstraintWeight <= 0.0)
@@ -215,15 +193,14 @@ Info<< "normalizeScenarioObjectives: "
 Info<< "Continuation settings: alphaRampDivisor=" << alphaRampDivisor
     << ", alphaRampIterations=" << alphaRampIterations
     << ", alphaCapMultiplier=" << alphaContinuationCapMultiplier
+    << ", betaStartIteration=" << projectionStartIteration
     << ", betaUpdateInterval=" << projectionUpdateInterval
     << ", betaGrowthFactor=" << projectionBetaGrowthFactor
     << ", betaMax=" << projectionBetaMax
     << ", qStages=[" << quStage1Value << "," << quStage2Value
     << "," << quStage3Value << "," << quStage4Value << "]"
     << endl;
-Info<< "Mode profile: "
-    << (normalizeScenarioObjectives ? "nso(normalized)" : "app(non-normalized)")
-    << " with projectionConstraintViolationTolForBeta="
+Info<< "Stability profile: projectionConstraintViolationTolForBeta="
     << projectionConstraintViolationTolForBeta
     << ", continuationConstraintViolationFreeze="
     << continuationConstraintViolationFreeze

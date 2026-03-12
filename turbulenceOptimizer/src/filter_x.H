@@ -10,8 +10,14 @@ recordLinearSolve
   xpFilterLinearSolvePerformance.nIterations()
 );
 //***********************************//Heaviside_filter
+const bool projectionContinuationActive = (opt >= projectionStartIteration);
 const bool projectionUpdateIteration =
-  (opt == 1) || ((opt % projectionUpdateInterval) == 0);
+  projectionContinuationActive
+  &&
+  (
+    (opt == projectionStartIteration)
+    || (((opt - projectionStartIteration) % projectionUpdateInterval) == 0)
+  );
 const scalar projectionConstraintViolation =
   Foam::max(weightedPowerConstraint, scalar(0.0));
 const bool allowProjectionContinuation =
@@ -66,9 +72,14 @@ else
   {
     del = projectionBetaInitial;
   }
-  else if (projectionUpdateIteration)
+  else if (projectionUpdateIteration && allowProjectionContinuation)
   {
     del = Foam::min(del*projectionBetaGrowthFactor, projectionBetaMax);
+  }
+  else if (projectionUpdateIteration && !allowProjectionContinuation)
+  {
+    // Hold projection sharpness when power-drop constraint is stressed.
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
   }
   else
   {

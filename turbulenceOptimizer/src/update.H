@@ -56,11 +56,16 @@ alphaTargetValue =
     alphaTargetValue,
     Foam::min(alphaMAX.value(), alphamax.value()*alphaContinuationCapMultiplier)
   );
+if (continuationFreeze && alphaTargetValue > alphaMax.value())
+{
+  // Do not harden Brinkman resistance while power-drop constraint is violated.
+  alphaTargetValue = alphaMax.value();
+}
 alphaMax.value() =
   alphaMax.value() + continuationBlend*(alphaTargetValue-alphaMax.value());
 
 const scalar quPrevious(qu);
-const scalar quContinuationBlend = continuationBlendFast;
+const scalar quContinuationBlend = continuationBlend;
 scalar quTarget(quStage1Value);
 if(opt<quStage1Iteration)
 {
@@ -92,6 +97,11 @@ else
   {
     quTarget = quStage4Value;
   }
+}
+if (continuationFreeze && quTarget > quPrevious)
+{
+  // Freeze q-continuation escalation until constraint stress is relieved.
+  quTarget = quPrevious;
 }
 qu = quPrevious + quContinuationBlend*(quTarget-quPrevious);
 qu = Foam::min(qu,quMax);

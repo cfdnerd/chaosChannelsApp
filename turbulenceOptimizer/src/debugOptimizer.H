@@ -375,6 +375,12 @@ if (Pstream::master())
 
   writeSectionHeader("Filter Diagnostics");
   writeRow("projection", "del="+fmtScalar(del), "eta5="+fmtScalar(eta5));
+  writeRow
+  (
+    "projection ctl",
+    "viol="+fmtScalar(projectionConstraintViolation),
+    std::string("allow=")+(allowProjectionContinuation ? "yes" : "no")
+  );
   writeRow("drho bounds", "min="+fmtScalar(drhoLocalMin), "max="+fmtScalar(drhoLocalMax));
   writeRow("obj sens", "min="+fmtScalar(fsensLocalMin), "max="+fmtScalar(fsensLocalMax));
   writeRow("power sens", "min="+fmtScalar(gsensPowerLocalMin), "max="+fmtScalar(gsensPowerLocalMax));
@@ -388,6 +394,7 @@ if (Pstream::master())
 
   writeSectionHeader("MMA Diagnostics");
   writeRow("controls", "moveLimit="+fmtScalar(movlim), "moveHits="+fmtCount(xMoveLimitHitCountLocal));
+  writeRow("constraint ctl", "pdViol="+fmtScalar(mmaPowerConstraintViolation), "stepDamping="+fmtScalar(mmaStepDamping));
   writeRow("bound clamps", "lower="+fmtCount(xLowerBoundCountLocal), "upper="+fmtCount(xUpperBoundCountLocal), "nonFiniteX="+fmtCount(xNonFiniteCountLocal));
 
   writeSectionHeader("Sensitivity Diagnostics");
@@ -396,7 +403,13 @@ if (Pstream::master())
   writeRow("volume", "min="+fmtScalar(gsensVolLocalMin), "max="+fmtScalar(gsensVolLocalMax), "l2="+fmtScalar(gsensVolL2), "nonFinite="+fmtCount(gsensVolNonFiniteCountLocal));
 
   writeSectionHeader("Solver Diagnostics");
-  writeRow("config", "primal=60", "adjPower=40", "adjHeat=40");
+  writeRow
+  (
+    "config",
+    "primal="+fmtCount(primalFlowIterations),
+    "adjPower="+fmtCount(adjointFlowIterations),
+    "adjHeat="+fmtCount(adjointFlowIterations)
+  );
   writeRow("primal flow", "|U|max="+fmtScalar(UMaxMagLocal), "|U|mean="+fmtScalar(UMeanMag), "pMin="+fmtScalar(pLocalMin), "pMax="+fmtScalar(pLocalMax));
   writeRow("thermal field", "TMin="+fmtScalar(TLocalMin), "TMax="+fmtScalar(TLocalMax));
   writeRow("adjoint power", "|Ua|max="+fmtScalar(UaMaxMagLocal), "|Ua|mean="+fmtScalar(UaMeanMag), "paMin="+fmtScalar(paLocalMin), "paMax="+fmtScalar(paLocalMax));
@@ -405,6 +418,12 @@ if (Pstream::master())
   writeSectionHeader("Interpolation Diagnostics");
   writeRow("interp bounds", "alphaMin="+fmtScalar(alphaLocalMin), "alphaMax="+fmtScalar(alphaLocalMax), "DTMin="+fmtScalar(DTLocalMin), "DTMax="+fmtScalar(DTLocalMax));
   writeRow("continuation", "alphaMax="+fmtScalar(alphaMax.value()), "qu="+fmtScalar(qu));
+  writeRow
+  (
+    "continuation ctl",
+    std::string("freeze=")+(continuationFreeze ? "yes" : "no"),
+    "blend="+fmtScalar(continuationBlend)
+  );
   writeRow("thermal props", "heatSource="+fmtScalar(heatSource.value()), "thermalSrc="+fmtScalar(thermalSource.value()), "rhoCp="+fmtScalar(rhoCp.value()));
 
   std::ofstream debugJsonFile(debugOptimizerJsonFile, std::ios::app);
@@ -452,6 +471,8 @@ if (Pstream::master())
     << ",\"filter\":{"
       << "\"del\":" << del
       << ",\"eta5\":" << eta5
+      << ",\"projectionConstraintViolation\":" << projectionConstraintViolation
+      << ",\"projectionContinuationAllowed\":" << (allowProjectionContinuation ? 1 : 0)
       << ",\"drhoMin\":" << drhoLocalMin
       << ",\"drhoMax\":" << drhoLocalMax
       << ",\"objectiveSensitivityFilteredMin\":" << fsensLocalMin
@@ -477,6 +498,8 @@ if (Pstream::master())
     << ",\"mma\":{"
       << "\"iteration\":" << opt
       << ",\"moveLimit\":" << movlim
+      << ",\"powerConstraintViolation\":" << mmaPowerConstraintViolation
+      << ",\"stepDamping\":" << mmaStepDamping
       << ",\"moveLimitHitCount\":" << xMoveLimitHitCountLocal
       << ",\"lowerBoundCount\":" << xLowerBoundCountLocal
       << ",\"upperBoundCount\":" << xUpperBoundCountLocal
@@ -497,9 +520,9 @@ if (Pstream::master())
       << ",\"volumeConstraintNonFiniteCount\":" << gsensVolNonFiniteCountLocal
     << "}"
     << ",\"solver\":{"
-      << "\"primalFlowSweeps\":" << 60
-      << ",\"adjointFlowPowerSweeps\":" << 40
-      << ",\"adjointFlowHeatSweeps\":" << 40
+      << "\"primalFlowSweeps\":" << primalFlowIterations
+      << ",\"adjointFlowPowerSweeps\":" << adjointFlowIterations
+      << ",\"adjointFlowHeatSweeps\":" << adjointFlowIterations
       << ",\"uMaxMag\":" << UMaxMagLocal
       << ",\"uMeanMag\":" << UMeanMag
       << ",\"pMin\":" << pLocalMin
@@ -522,6 +545,8 @@ if (Pstream::master())
       << ",\"dtMax\":" << DTLocalMax
       << ",\"alphaMaxSchedule\":" << alphaMax.value()
       << ",\"qu\":" << qu
+      << ",\"continuationFreeze\":" << (continuationFreeze ? 1 : 0)
+      << ",\"continuationBlend\":" << continuationBlend
       << ",\"heatSource\":" << heatSource.value()
       << ",\"thermalSource\":" << thermalSource.value()
       << ",\"rhoCp\":" << rhoCp.value()

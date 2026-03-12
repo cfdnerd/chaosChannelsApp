@@ -26,14 +26,23 @@ int main(int argc, char *argv[])
     {
         #include "solverConvergenceReset.H"
         #include "update.H"
-        // Apply inlet velocity and turbulence inlet state for this single-case run.
-        const vector caseInletVelocity = inletVelocityDirection*inletSpeed;
-        U.boundaryFieldRef()[inletPatchID] = caseInletVelocity;
-        Ua.boundaryFieldRef()[inletPatchID] = caseInletVelocity;
-
+        // Respect case-defined inlet BCs; derive turbulence inlet state from current primal inlet velocity.
+        scalar currentInletSpeedForLog(inletSpeed);
         if (updateTurbulenceInletFromVelocity)
         {
-            const scalar currentInletSpeed = Foam::max(mag(caseInletVelocity), scalar(SMALL));
+            scalar currentInletSpeedLocal(0.0);
+            const auto& inletU = U.boundaryField()[inletPatchID];
+            if (inletU.size() > 0)
+            {
+                forAll(inletU, faceI)
+                {
+                    currentInletSpeedLocal += mag(inletU[faceI]);
+                }
+                currentInletSpeedLocal /= scalar(inletU.size());
+            }
+            const scalar currentInletSpeed =
+                Foam::max(currentInletSpeedLocal, scalar(SMALL));
+            currentInletSpeedForLog = currentInletSpeed;
             const scalar turbulenceK =
                 Foam::max(1.5*Foam::sqr(turbulenceIntensity*currentInletSpeed), kMinBound);
             const scalar turbulenceEpsilon =
@@ -61,10 +70,9 @@ int main(int argc, char *argv[])
         }
 
         U.correctBoundaryConditions();
-        Ua.correctBoundaryConditions();
 
         Info<< "Running single-case optimization with inlet speed "
-            << inletSpeed << " m/s" << endl;
+            << currentInletSpeedForLog << " m/s" << endl;
         #include "Primal_U.H"
         if (stopOptimization)
         {

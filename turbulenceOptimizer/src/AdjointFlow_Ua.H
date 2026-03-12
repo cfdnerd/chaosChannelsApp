@@ -38,7 +38,6 @@ for(i=0;i<adjointFlowIterations;i++)
   volScalarField rAUa(1.0/UaEqn.A());
   volVectorField HbyAa("HbyAa", Ua);
   HbyAa = rAUa*UaEqn.H();
-  tUaEqn.clear();          
   surfaceScalarField phiHbyAa("phiHbyAa", fvc::flux(HbyAa));
   adjustPhi(phiHbyAa, Ua, pa);
   
@@ -61,7 +60,7 @@ for(i=0;i<adjointFlowIterations;i++)
   {
       fvScalarMatrix paEqn
       (
-          fvm::laplacian(rAUa, pa) == fvc::div(phiHbyAa)
+          fvm::laplacian(rAtUa(), pa) == fvc::div(phiHbyAa)
       );
 
       paEqn.setReference(paRefCell, paRefValue);
@@ -86,7 +85,7 @@ for(i=0;i<adjointFlowIterations;i++)
   pa.relax();
 
   // Adjoint momentum corrector
-  Ua = HbyAa - rAUa*fvc::grad(pa);
+  Ua = HbyAa - rAtUa()*fvc::grad(pa);
   Ua.correctBoundaryConditions();
   fvOptions.correct(Ua);
   
