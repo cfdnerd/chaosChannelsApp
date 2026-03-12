@@ -25,20 +25,28 @@ for(i=0;i<n;i++)
 
 fsenshMeanT = fsenshCurrent;
 gsenshPowerDiss = gsenshPowerCurrent;
+scalar powerConstraintReference(1.0);
 if (normalizeScenarioObjectives)
 {
  const scalar objectiveReference =
    objectiveIterationOneReferenceCaptured
    ? objectiveIterationOneReference
    : Foam::max(Foam::mag(MeanTPhysical), scalar(SMALL));
+ powerConstraintReference =
+   powerIterationOneReferenceCaptured
+   ? powerIterationOneReference
+   : Foam::max(Foam::mag(PowerDissPhysical), scalar(SMALL));
  fsenshMeanT = fsenshMeanT/Foam::max(objectiveReference, scalar(SMALL));
+ gsenshPowerDiss = gsenshPowerDiss/Foam::max(powerConstraintReference, scalar(SMALL));
 }
 #include "filter_chainrule.H"
 
 const scalar tighteningIterations =
   scalar(Foam::max(opt - powerConstraintTighteningStartIteration, label(0)));
-const scalar powerConstraintDenominator =
+const scalar powerConstraintDenominatorRaw =
   Foam::max(PowerDissRelax - powerConstraintTighteningRate*tighteningIterations, PowerDissMax);
+const scalar powerConstraintDenominator =
+  powerConstraintDenominatorRaw/Foam::max(powerConstraintReference, scalar(SMALL));
 const scalar weightedPowerConstraint =
   optPowerConstraintWeight*(powerConstraintNormalized/powerConstraintDenominator-1.0);
 const scalar weightedVolumeConstraint = optVolumeConstraintWeight*V;

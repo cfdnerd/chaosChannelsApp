@@ -63,29 +63,47 @@ if (normalizeScenarioObjectives)
           << objectiveIterationOneReference << endl;
     }
   }
+  if (!powerIterationOneReferenceCaptured && opt == 1)
+  {
+    powerIterationOneReference = Foam::max(Foam::mag(powerDissCase), scalar(SMALL));
+    powerIterationOneReferenceCaptured = true;
+    if (Pstream::master())
+    {
+      Info<< "Captured power iteration-1 normalization reference: "
+          << powerIterationOneReference << endl;
+    }
+  }
   const scalar objectiveReference =
     objectiveIterationOneReferenceCaptured
     ? objectiveIterationOneReference
     : Foam::max(Foam::mag(meanTCase), scalar(SMALL));
+  const scalar powerReference =
+    powerIterationOneReferenceCaptured
+    ? powerIterationOneReference
+    : Foam::max(Foam::mag(powerDissCase), scalar(SMALL));
   MeanT = meanTCase/Foam::max(objectiveReference, scalar(SMALL));
+  PowerDiss = powerDissCase/Foam::max(powerReference, scalar(SMALL));
 }
 
 objectiveNormalized = MeanT;
 powerConstraintNormalized = PowerDiss;
 PD0Sug = PowerDiss0;
-if
-(
-  powerConstraintNormalized > PowerDissRelax
-  &&
-  PowerDissMax > SMALL
-)
+if (!normalizeScenarioObjectives)
 {
-  PD0Sug =
-    PowerDiss0
-   *(
-      powerConstraintNormalized
-     /Foam::max(PowerDissMax, scalar(SMALL))
-    );
+  if
+  (
+    powerConstraintNormalized > PowerDissRelax
+    &&
+    PowerDissMax > SMALL
+  )
+  {
+    PD0Sug =
+      PowerDiss0
+     *(
+        powerConstraintNormalized
+       /Foam::max(PowerDissMax, scalar(SMALL))
+      );
+  }
 }
 
 PowerDissActualOverBase = PowerDissPhysical;
@@ -94,13 +112,16 @@ PowerDissActual = PowerDissActualOverBase*PowerDiss0;
 if (Pstream::master())
 {
    std::ofstream historyFile(optimizationHistoryFile, std::ios::app);
-   historyFile
-     << std::right
+   historyFile << std::right
      << std::setw(8) << opt
      << std::scientific << std::setprecision(8)
      << std::setw(16) << PowerDissActual
-     << std::setw(16) << powerConstraintNormalized
-     << std::setw(16) << PD0Sug
+     << std::setw(16) << powerConstraintNormalized;
+   if (!normalizeScenarioObjectives)
+   {
+     historyFile << std::setw(16) << PD0Sug;
+   }
+   historyFile
      << std::setw(16) << V
      << std::setw(16) << objectiveNormalized
      << std::setw(16) << maxT
