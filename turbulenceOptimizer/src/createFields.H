@@ -87,6 +87,7 @@ scalar projectionEtaEps(1e-6);
 label projectionUpdateInterval(25);
 scalar projectionObjectiveTolForBeta(5e-3);
 scalar projectionStepTolForBeta(5e-3);
+scalar projectionConstraintViolationTolForBeta(0.1);
 label powerConstraintTighteningStartIteration(0);
 scalar powerConstraintTighteningRate(0.0);
 scalar alphaRampDivisor(40.0);
@@ -104,6 +105,11 @@ scalar quStage2Value(0.1);
 scalar quStage3Value(1.0);
 scalar quStage4Value(10.0);
 scalar quMax(10.0);
+scalar continuationConstraintViolationFreeze(0.1);
+scalar continuationBlendFast(0.25);
+scalar continuationBlendSlow(0.05);
+scalar mmaConstraintDampingGain(1.5);
+scalar mmaConstraintDampingMin(0.3);
 scalar filterRStart(filterR);
 scalar filterREnd(filterR);
 label filterRContinuationStart(0);
@@ -128,6 +134,8 @@ projectionEtaTolerance = Foam::max(projectionEtaTolerance, scalar(1e-8));
 projectionUpdateInterval = Foam::max(projectionUpdateInterval, label(1));
 projectionObjectiveTolForBeta = Foam::max(projectionObjectiveTolForBeta, scalar(1e-8));
 projectionStepTolForBeta = Foam::max(projectionStepTolForBeta, scalar(1e-8));
+projectionConstraintViolationTolForBeta =
+  Foam::max(projectionConstraintViolationTolForBeta, scalar(0.0));
 projectionStepTolForBeta =
   Foam::max
   (
@@ -149,6 +157,15 @@ quStage2Value = Foam::max(quStage2Value, quStage1Value);
 quStage3Value = Foam::max(quStage3Value, quStage2Value);
 quStage4Value = Foam::max(quStage4Value, quStage3Value);
 quMax = Foam::max(quMax, quStage4Value);
+continuationConstraintViolationFreeze =
+  Foam::max(continuationConstraintViolationFreeze, scalar(0.0));
+continuationBlendFast =
+  Foam::min(Foam::max(continuationBlendFast, scalar(1e-6)), scalar(1.0));
+continuationBlendSlow =
+  Foam::min(Foam::max(continuationBlendSlow, scalar(1e-6)), scalar(1.0));
+mmaConstraintDampingGain = Foam::max(mmaConstraintDampingGain, scalar(0.0));
+mmaConstraintDampingMin =
+  Foam::min(Foam::max(mmaConstraintDampingMin, scalar(1e-3)), scalar(1.0));
 filterRStart = Foam::max(filterRStart, scalar(1e-6));
 filterREnd = Foam::max(filterREnd, scalar(1e-6));
 if (optPowerConstraintWeight <= 0.0)

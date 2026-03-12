@@ -34,37 +34,74 @@ forAll(xh, i)
 }
 xh.correctBoundaryConditions();
 
+const scalar previousConstraintViolation =
+  Foam::max(static_cast<scalar>(gx[0]), scalar(0.0));
+const bool continuationFreeze =
+  previousConstraintViolation > continuationConstraintViolationFreeze;
+const scalar continuationBlend =
+  continuationFreeze ? continuationBlendSlow : continuationBlendFast;
+
+scalar alphaTargetValue(alphaMax.value());
 if(opt<=alphaRampIterations)
 {
-  alphaMax=alphamax*(opt/alphaRampDivisor+1.0);
+  alphaTargetValue = alphamax.value()*(scalar(opt)/alphaRampDivisor+1.0);
 }
 if(opt>alphaGrowthStartIteration)
 {
-  alphaMax=alphaMax*alphaGrowthFactor;
+  alphaTargetValue *= alphaGrowthFactor;
 }
-alphaMax.value()=
+alphaTargetValue =
   Foam::min
   (
-    alphaMax.value(),
+    alphaTargetValue,
     Foam::min(alphaMAX.value(), alphamax.value()*alphaContinuationCapMultiplier)
   );
+if (continuationFreeze && alphaTargetValue > alphaMax.value())
+{
+  alphaTargetValue = alphaMax.value();
+}
+alphaMax.value() =
+  alphaMax.value() + continuationBlend*(alphaTargetValue-alphaMax.value());
+
+const scalar quPrevious(qu);
+scalar quTarget(quStage1Value);
 if(opt<quStage1Iteration)
 {
-  qu=quStage1Value;
+  quTarget = quStage1Value;
 }
 else if(opt<quStage2Iteration)
 {
-  qu=quStage2Value;
+  const scalar t =
+    scalar(opt-quStage1Iteration)/scalar(quStage2Iteration-quStage1Iteration);
+  quTarget = quStage1Value + (quStage2Value-quStage1Value)*t;
 }
 else if(opt<quStage3Iteration)
 {
-  qu=quStage3Value;
+  const scalar t =
+    scalar(opt-quStage2Iteration)/scalar(quStage3Iteration-quStage2Iteration);
+  quTarget = quStage2Value + (quStage3Value-quStage2Value)*t;
 }
 else
 {
-  qu=quStage4Value;
+  const label quStage4RampEnd =
+    quStage3Iteration + Foam::max(quStage3Iteration-quStage2Iteration, label(1));
+  if (opt<quStage4RampEnd)
+  {
+    const scalar t =
+      scalar(opt-quStage3Iteration)/scalar(quStage4RampEnd-quStage3Iteration);
+    quTarget = quStage3Value + (quStage4Value-quStage3Value)*t;
+  }
+  else
+  {
+    quTarget = quStage4Value;
+  }
 }
-qu=Foam::min(qu,quMax);
+if (continuationFreeze && quTarget > quPrevious)
+{
+  quTarget = quPrevious;
+}
+qu = quPrevious + continuationBlend*(quTarget-quPrevious);
+qu = Foam::min(qu,quMax);
 
 scalar filterSchedule(1.0);
 if (filterRContinuationEnd > filterRContinuationStart)

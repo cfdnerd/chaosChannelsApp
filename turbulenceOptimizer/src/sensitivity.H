@@ -71,9 +71,23 @@ for(i=0;i<n;i++)
 
 Info<< "\n run MMA \n" << endl;
 mma.MMAsolver(xmma, dfdx, gx, dgdx);
+const scalar mmaPowerConstraintViolation =
+  Foam::max(weightedPowerConstraint, scalar(0.0));
+const scalar mmaStepDamping =
+  Foam::max
+  (
+    mmaConstraintDampingMin,
+    scalar(1.0)
+   /(
+      scalar(1.0) + mmaConstraintDampingGain*mmaPowerConstraintViolation
+    )
+  );
 for(i=0;i<n;i++)
 {
-   x[i]=Foam::min(Foam::max(xmma[i],rhoMin),scalar(1.0));
+   const scalar xCandidate =
+     Foam::min(Foam::max(static_cast<scalar>(xmma[i]),rhoMin),scalar(1.0));
+   x[i]=xOld[i]+mmaStepDamping*(xCandidate-xOld[i]);
+   x[i]=Foam::min(Foam::max(x[i],rhoMin),scalar(1.0));
 }
 if(solid_area)
 {

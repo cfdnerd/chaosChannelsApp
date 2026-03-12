@@ -10,6 +10,12 @@ recordLinearSolve
   xpFilterLinearSolvePerformance.nIterations()
 );
 //***********************************//Heaviside_filter
+const bool projectionUpdateIteration =
+  (opt == 1) || ((opt % projectionUpdateInterval) == 0);
+const scalar projectionConstraintViolation =
+  Foam::max(weightedPowerConstraint, scalar(0.0));
+const bool allowProjectionContinuation =
+  projectionConstraintViolation <= projectionConstraintViolationTolForBeta;
 if (adaptiveHeavisideProjection)
 {
   scalar maxAbsXStepForProjectionLocal(0.0);
@@ -28,8 +34,6 @@ if (adaptiveHeavisideProjection)
      /Foam::max(Foam::mag(objectiveNormalized), scalar(SMALL));
   }
 
-  const bool projectionUpdateIteration =
-    (opt == 1) || ((opt % projectionUpdateInterval) == 0);
   bool projectionUpdateStable =
     objectiveRelativeDeltaForProjection <= projectionObjectiveTolForBeta
     &&
@@ -39,9 +43,13 @@ if (adaptiveHeavisideProjection)
   {
     del = projectionBetaInitial;
   }
-  else if (projectionUpdateIteration && projectionUpdateStable)
+  else if (projectionUpdateIteration && projectionUpdateStable && allowProjectionContinuation)
   {
     del = Foam::min(del + projectionBetaRate, projectionBetaMax);
+  }
+  else if (projectionUpdateIteration && !allowProjectionContinuation)
+  {
+    del = Foam::max(del/projectionBetaGrowthFactor, projectionBetaInitial);
   }
   else
   {
@@ -50,14 +58,23 @@ if (adaptiveHeavisideProjection)
 }
 else
 {
-  // Conservative deterministic continuation: multiplicative beta updates.
-  const label betaUpdateCount = Foam::max((opt-1)/projectionUpdateInterval, label(0));
-  del =
-    Foam::min
-    (
-      projectionBetaInitial*Foam::pow(projectionBetaGrowthFactor, betaUpdateCount),
-      projectionBetaMax
-    );
+  // Conservative deterministic continuation with feasibility-gated growth.
+  if (opt == 1)
+  {
+    del = projectionBetaInitial;
+  }
+  else if (projectionUpdateIteration && allowProjectionContinuation)
+  {
+    del = Foam::min(del*projectionBetaGrowthFactor, projectionBetaMax);
+  }
+  else if (projectionUpdateIteration && !allowProjectionContinuation)
+  {
+    del = Foam::max(del/projectionBetaGrowthFactor, projectionBetaInitial);
+  }
+  else
+  {
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
+  }
 }
 if (projectionNumericalSafeguards)
 {
