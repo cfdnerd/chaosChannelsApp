@@ -1,23 +1,3 @@
-const scalar fsensScaleCurrent =
-  Foam::max(gMax(mag(fsenshMeanT.primitiveField())), scalar(SMALL));
-const scalar gsensPowerScaleCurrent =
-  Foam::max(gMax(mag(gsenshPowerDiss.primitiveField())), scalar(SMALL));
-if (!objectiveSensitivityScaleReferenceCaptured)
-{
-  objectiveSensitivityScaleReference = fsensScaleCurrent;
-  objectiveSensitivityScaleReferenceCaptured = true;
-}
-if (!powerSensitivityScaleReferenceCaptured)
-{
-  powerSensitivityScaleReference = gsensPowerScaleCurrent;
-  powerSensitivityScaleReferenceCaptured = true;
-}
-const scalar fsensScale =
-  Foam::max(objectiveSensitivityScaleReference, scalar(SMALL));
-const scalar gsensPowerScale =
-  Foam::max(powerSensitivityScaleReference, scalar(SMALL));
-fsenshMeanT=fsenshMeanT/fsensScale;
-gsenshPowerDiss=gsenshPowerDiss/gsensPowerScale;
 gsenshVol.primitiveFieldRef() = 1.0;
 //***********************************//Heaviside_filter
 if(opt>1)

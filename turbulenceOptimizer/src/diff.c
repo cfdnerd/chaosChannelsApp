@@ -20,7 +20,6 @@ scalar diff(volScalarField &gamma,const scalarField &V,double del,double eta,int
      {
         z=z+(gamma[i]-x[i])*V[i];
      }
-     delete x;
+     delete[] x;
      return {z};
 }
-

@@ -248,6 +248,36 @@ scalar n(0),N(0),eta0(0),eta5(0.5),eta1(1),y0(0),y5(0);
 n=x.size();//n:length of x in the i-th core
 N=x.size();//N:design freedom
 reduce(N, sumOp<scalar>()); 
+std::vector<unsigned char> passiveCellMask(n, 0);
+if (solid_area)
+{
+  forAll(cells_solid, iCell)
+  {
+    passiveCellMask[cells_solid[iCell]] = 1;
+  }
+}
+if (fluid_area)
+{
+  forAll(cells_fluid, iCell)
+  {
+    passiveCellMask[cells_fluid[iCell]] = 1;
+  }
+}
+if (test_area)
+{
+  forAll(cells_test, iCell)
+  {
+    passiveCellMask[cells_test[iCell]] = 1;
+  }
+}
+scalar activeDesignDOFLocal(0);
+for (int iCell = 0; iCell < n; ++iCell)
+{
+  activeDesignDOFLocal += passiveCellMask[iCell] ? scalar(0) : scalar(1);
+}
+scalar activeDesignDOF(activeDesignDOFLocal);
+reduce(activeDesignDOF, sumOp<scalar>());
+activeDesignDOF = Foam::max(activeDesignDOF, scalar(1));
 
 scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PowerDissActualOverBase(0),PD0Sug(0),maxT(0),sumT(0);
 scalar MeanTPhysical(0),PowerDissPhysical(0);
@@ -256,10 +286,6 @@ scalar objectiveIterationOneReference(1.0);
 bool objectiveIterationOneReferenceCaptured(false);
 scalar powerIterationOneReference(1.0);
 bool powerIterationOneReferenceCaptured(false);
-scalar objectiveSensitivityScaleReference(1.0);
-bool objectiveSensitivityScaleReferenceCaptured(false);
-scalar powerSensitivityScaleReference(1.0);
-bool powerSensitivityScaleReferenceCaptured(false);
 scalar previousObjectiveValue(0);
 bool hasPreviousObjectiveValue(false);
 bool stopOptimization(false);

@@ -55,9 +55,18 @@ gx[1]=weightedVolumeConstraint;
 for(i=0;i<n;i++)
 {
  xmma[i] = x[i];
- dfdx[i]=fsensMeanT[i]/N;//sensitivities of objective function
- dgdx[0][i]=optPowerConstraintWeight*(gsensPowerDiss[i]/N)/powerConstraintDenominator;//sensitivities of constraint function
- dgdx[1][i]=optVolumeConstraintWeight*(gsensVol[i]/N);//sensitivities of constraint function
+ if (passiveCellMask[i])
+ {
+   dfdx[i]=0.0;
+   dgdx[0][i]=0.0;
+   dgdx[1][i]=0.0;
+ }
+ else
+ {
+   dfdx[i]=fsensMeanT[i]/activeDesignDOF;//sensitivities of objective function
+   dgdx[0][i]=optPowerConstraintWeight*(gsensPowerDiss[i]/activeDesignDOF)/powerConstraintDenominator;//sensitivities of constraint function
+   dgdx[1][i]=optVolumeConstraintWeight*(gsensVol[i]/activeDesignDOF);//sensitivities of constraint function
+ }
 }
 
 Info<< "\n run MMA \n" << endl;
@@ -65,6 +74,30 @@ mma.MMAsolver(xmma, dfdx, gx, dgdx);
 for(i=0;i<n;i++)
 {
    x[i]=Foam::min(Foam::max(xmma[i],rhoMin),scalar(1.0));
+}
+if(solid_area)
+{
+   forAll(cells_solid, iCell)
+   {
+      x[cells_solid[iCell]]=rhoMin;
+      xh[cells_solid[iCell]]=rhoMin;
+   }
+}
+if(fluid_area)
+{
+   forAll(cells_fluid, iCell)
+   {
+      x[cells_fluid[iCell]]=1.0;
+      xh[cells_fluid[iCell]]=1.0;
+   }
+}
+if(test_area)
+{
+   forAll(cells_test, iCell)
+   {
+      x[cells_test[iCell]]=1.0;
+      xh[cells_test[iCell]]=1.0;
+   }
 }
 
 #include "filter_x.H"

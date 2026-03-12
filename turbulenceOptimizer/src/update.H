@@ -8,6 +8,7 @@ if(solid_area)
 {
    forAll(cells_solid, i)
    {
+      x[cells_solid[i]]=rhoMin;
       xh[cells_solid[i]]=rhoMin;
    }
 }
@@ -15,7 +16,16 @@ if(fluid_area)
 {
    forAll(cells_fluid, i)
    {
+      x[cells_fluid[i]]=1.0;
       xh[cells_fluid[i]]=1.0;
+   }
+}
+if(test_area)
+{
+   forAll(cells_test, i)
+   {
+      x[cells_test[i]]=1.0;
+      xh[cells_test[i]]=1.0;
    }
 }
 forAll(xh, i)

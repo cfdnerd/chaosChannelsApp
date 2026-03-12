@@ -21,15 +21,11 @@ reduce(maxTCase, maxOp<scalar>());
 
 if
 (
-  turbulenceProMode
-  &&
-  (
-    !std::isfinite(static_cast<double>(meanTCase))
-    ||
-    !std::isfinite(static_cast<double>(powerDissCase))
-    ||
-    !std::isfinite(static_cast<double>(maxTCase))
-  )
+  !std::isfinite(static_cast<double>(meanTCase))
+  ||
+  !std::isfinite(static_cast<double>(powerDissCase))
+  ||
+  !std::isfinite(static_cast<double>(maxTCase))
 )
 {
   stopOptimization = true;
