@@ -16,6 +16,8 @@ const scalar projectionConstraintViolation =
   Foam::max(weightedPowerConstraint, scalar(0.0));
 const bool allowProjectionContinuation =
   projectionConstraintViolation <= projectionConstraintViolationTolForBeta;
+const scalar projectionSoftGrowthFactor =
+  scalar(1.0) + scalar(0.15)*(projectionBetaGrowthFactor - scalar(1.0));
 if (adaptiveHeavisideProjection)
 {
   scalar maxAbsXStepForProjectionLocal(0.0);
@@ -49,8 +51,8 @@ if (adaptiveHeavisideProjection)
   }
   else if (projectionUpdateIteration && !allowProjectionContinuation)
   {
-    // Hold current projection sharpness while infeasible (avoid regression to gray).
-    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
+    // Under constraint stress, grow slowly instead of freezing at beta=1.
+    del = Foam::min(Foam::max(del*projectionSoftGrowthFactor, projectionBetaInitial), projectionBetaMax);
   }
   else
   {
@@ -70,8 +72,8 @@ else
   }
   else if (projectionUpdateIteration && !allowProjectionContinuation)
   {
-    // Hold current projection sharpness while infeasible (avoid regression to gray).
-    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
+    // Under constraint stress, grow slowly instead of freezing at beta=1.
+    del = Foam::min(Foam::max(del*projectionSoftGrowthFactor, projectionBetaInitial), projectionBetaMax);
   }
   else
   {

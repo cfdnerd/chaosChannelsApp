@@ -56,10 +56,6 @@ alphaTargetValue =
     alphaTargetValue,
     Foam::min(alphaMAX.value(), alphamax.value()*alphaContinuationCapMultiplier)
   );
-if (continuationFreeze && alphaTargetValue > alphaMax.value())
-{
-  alphaTargetValue = alphaMax.value();
-}
 alphaMax.value() =
   alphaMax.value() + continuationBlend*(alphaTargetValue-alphaMax.value());
 
@@ -95,10 +91,6 @@ else
   {
     quTarget = quStage4Value;
   }
-}
-if (continuationFreeze && quTarget > quPrevious)
-{
-  quTarget = quPrevious;
 }
 qu = quPrevious + continuationBlend*(quTarget-quPrevious);
 qu = Foam::min(qu,quMax);
