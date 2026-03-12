@@ -1,0 +1,44 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      tuneOptParameters;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convergenceControl
+{
+    optMinIterations             50;
+    optStallWindow               5;
+    optObjectiveTol              1e-3;
+    optConstraintTol             1e-3;
+    optStepTol                   5e-3;
+    optPowerConstraintWeight     1.0;
+    optVolumeConstraintWeight    1.0;
+}
+
+adaptiveHeavisideProjection      no;   // Adaptive Heaviside beta continuation
+enableTbBcSmoothingMode          no;   // Activate tbBcSmoothingMode field
+normalizeScenarioObjectives      yes;   // Normalize MeanT/PDCon using first valid iteration
+
+turbulenceOptimization
+{
+    turbulenceProMode                 no;  // Master: force-enable all Pro controls below
+    projectionNumericalSafeguards     no; // Projection eta clamps and non-finite guards
+    enforceTurbulenceBounds           no;  // Clamp k/epsilon/nut to configured bounds
+    enableThermalDivergenceGuard      no;  // Stop when thermal solve becomes unhealthy
+    clipTemperatureField              no;  // Clamp T field to configured min/max
+    enableAdjointHeatSourceClipping   no;  // Clamp adjoint heat source term
+    enableNonFiniteMetricStop         no;  // Stop on non-finite MeanT/PDCon/MaxT
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -1,0 +1,52 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    object      Tb;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 0 0 1 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    outlet
+    {
+       type             groovyBC;
+       variables "mode=tbBcSmoothingMode;kappaEff=DT;hRaw=(U&normal());hReg=1e-8;deltaN=(mag(delta())+1e-12);hPos=0.5*(hRaw+sqrt(hRaw*hRaw+hReg*hReg));fSmooth=(hPos*deltaN)/(kappaEff + hPos*deltaN);fRaw=(hRaw*deltaN)/(kappaEff + hRaw*deltaN);Tinf=0;f=mode*fSmooth+(1-mode)*fRaw;";
+       valueExpression  "Tinf";
+       gradientExpression "0";
+       fractionExpression "f";
+       value           uniform 0;
+    }
+    Wall
+    {
+        type            zeroGradient;   
+    }
+    right
+    {
+        type            symmetry;
+    }
+    frontAndBack
+    {
+        type            empty;
+    }
+
+}
+
+// ************************************************************************* //
