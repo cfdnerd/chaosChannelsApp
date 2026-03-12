@@ -173,6 +173,7 @@ mmaConstraintDampingActivation =
 if (!normalizeScenarioObjectives)
 {
   // app mode profile (normalizeScenarioObjectives=no): keep evolution active.
+  projectionBetaGrowthFactor = Foam::min(projectionBetaGrowthFactor, scalar(1.25));
   projectionConstraintViolationTolForBeta = 1.0;
   continuationConstraintViolationFreeze = 1.0;
   continuationBlendFast = 0.35;

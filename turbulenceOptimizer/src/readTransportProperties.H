@@ -60,7 +60,7 @@ label primalFlowIterations(60);
 label adjointFlowIterations(40);
 label turbulenceCorrectorInterval(1);
 label freezeTurbulenceUntilIteration(0);
-Switch useTurbulentResistance(true);
+Switch useTurbulentResistance(false);
 Switch frozenTurbulenceAdjoint(true);
 Switch enableThermalFallback(true);
 Switch enforceTurbulenceBounds(false);
@@ -122,6 +122,12 @@ if (tuneOptParameters.found("turbulenceOptimization"))
     (
       "projectionNumericalSafeguards",
       projectionNumericalSafeguards
+    );
+  useTurbulentResistance =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "useTurbulentResistance",
+      useTurbulentResistance
     );
   enforceTurbulenceBounds =
     turbulenceOptimization.lookupOrDefault<Switch>
@@ -222,6 +228,7 @@ Info<< "Inlet speed [m/s]: " << inletSpeed
 Info<< "turbulenceProMode: " << (turbulenceProMode ? "on" : "off") << endl;
 Info<< "Pro controls: projectionSafeguards="
     << (projectionNumericalSafeguards ? "on" : "off")
+    << ", turbulentResistanceScale=" << (useTurbulentResistance ? "on" : "off")
     << ", turbulenceBounds=" << (enforceTurbulenceBounds ? "on" : "off")
     << ", thermalDivergenceGuard=" << (enableThermalDivergenceGuard ? "on" : "off")
     << ", temperatureClipping=" << (clipTemperatureField ? "on" : "off")
