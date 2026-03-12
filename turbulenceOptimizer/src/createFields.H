@@ -53,6 +53,13 @@ adaptiveHeavisideProjection =
     "adaptiveHeavisideProjection",
     adaptiveHeavisideProjection
   );
+Switch normalizeScenarioObjectives(false);
+normalizeScenarioObjectives =
+  tuneOptParameters.lookupOrDefault<Switch>
+  (
+    "normalizeScenarioObjectives",
+    normalizeScenarioObjectives
+  );
 const dictionary& convergenceControl = tuneOptParameters.subDict("convergenceControl");
 label optMinIterations(convergenceControl.lookupOrDefault<label>("optMinIterations", 50));
 label optStallWindow(convergenceControl.lookupOrDefault<label>("optStallWindow", 5));
@@ -130,6 +137,9 @@ if (optVolumeConstraintWeight <= 0.0)
     << optVolumeConstraintWeight
     << exit(FatalError);
 }
+Info<< "normalizeScenarioObjectives: "
+    << (normalizeScenarioObjectives ? "enabled" : "disabled")
+    << " (iteration-1 fixed objective scaling)" << endl;
 Info<< "Reading pseudo-density field\n" << endl;
 volScalarField xp
 (

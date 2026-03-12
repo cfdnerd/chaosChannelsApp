@@ -51,6 +51,25 @@ MeanTPhysical = meanTCase;
 PowerDissPhysical = powerDissCase;
 maxT = maxTCase;
 
+if (normalizeScenarioObjectives)
+{
+  if (!objectiveIterationOneReferenceCaptured && opt == 1)
+  {
+    objectiveIterationOneReference = Foam::max(Foam::mag(meanTCase), scalar(SMALL));
+    objectiveIterationOneReferenceCaptured = true;
+    if (Pstream::master())
+    {
+      Info<< "Captured objective iteration-1 normalization reference: "
+          << objectiveIterationOneReference << endl;
+    }
+  }
+  const scalar objectiveReference =
+    objectiveIterationOneReferenceCaptured
+    ? objectiveIterationOneReference
+    : Foam::max(Foam::mag(meanTCase), scalar(SMALL));
+  MeanT = meanTCase/Foam::max(objectiveReference, scalar(SMALL));
+}
+
 objectiveNormalized = MeanT;
 powerConstraintNormalized = PowerDiss;
 PD0Sug = PowerDiss0;

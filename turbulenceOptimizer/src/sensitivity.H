@@ -25,6 +25,14 @@ for(i=0;i<n;i++)
 
 fsenshMeanT = fsenshCurrent;
 gsenshPowerDiss = gsenshPowerCurrent;
+if (normalizeScenarioObjectives)
+{
+ const scalar objectiveReference =
+   objectiveIterationOneReferenceCaptured
+   ? objectiveIterationOneReference
+   : Foam::max(Foam::mag(MeanTPhysical), scalar(SMALL));
+ fsenshMeanT = fsenshMeanT/Foam::max(objectiveReference, scalar(SMALL));
+}
 #include "filter_chainrule.H"
 
 const scalar tighteningIterations =

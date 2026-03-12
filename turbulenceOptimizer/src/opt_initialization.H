@@ -16,6 +16,11 @@ if (Pstream::master())
     << "# PDAct=PowerDissActual physical-scale pumping power metric\n"
     << "# PDCon=power constraint value used by MMA (normalized)\n"
     << "# PD0Sug=PowerDiss0*(PDCon/PowerDissMax) when PDCon>PowerDissRelax; else PowerDiss0\n";
+  if (normalizeScenarioObjectives)
+  {
+    historyFile
+      << "# MeanT is normalized by its iteration-1 absolute value reference\n";
+  }
   historyFile
     << std::left
     << std::setw(8) << "Iter"
@@ -232,6 +237,8 @@ reduce(N, sumOp<scalar>());
 scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PowerDissActualOverBase(0),PD0Sug(0),maxT(0),sumT(0);
 scalar MeanTPhysical(0),PowerDissPhysical(0);
 scalar objectiveNormalized(0),powerConstraintNormalized(0);
+scalar objectiveIterationOneReference(1.0);
+bool objectiveIterationOneReferenceCaptured(false);
 scalar previousObjectiveValue(0);
 bool hasPreviousObjectiveValue(false);
 bool stopOptimization(false);
