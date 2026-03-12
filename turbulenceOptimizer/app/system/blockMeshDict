@@ -22,7 +22,7 @@ yMax 4.65;
 zMin -0.003;
 zMax 0;
 xD 1.25;
-yDMin -0.4;
+yDMin -0.8;
 yDMax 5.45;
 
 fNx 40;
