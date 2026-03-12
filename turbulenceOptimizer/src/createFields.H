@@ -82,6 +82,7 @@ scalar projectionBetaGrowthFactor(1.5);
 scalar projectionEtaLower(1e-4);
 scalar projectionEtaUpper(1.0);
 scalar projectionEtaTolerance(1e-4);
+scalar projectionEtaEps(1e-6);
 label projectionUpdateInterval(25);
 scalar projectionObjectiveTolForBeta(5e-3);
 scalar projectionStepTolForBeta(5e-3);
@@ -110,8 +111,18 @@ label filterRContinuationEnd(1);
 rhoMin = Foam::min(Foam::max(rhoMin, scalar(1e-6)), scalar(0.25));
 projectionBetaInitial = Foam::max(projectionBetaInitial, scalar(1e-6));
 projectionBetaGrowthFactor = Foam::max(projectionBetaGrowthFactor, scalar(1.0));
-projectionEtaLower = Foam::max(projectionEtaLower, scalar(1e-8));
-projectionEtaUpper = Foam::min(Foam::max(projectionEtaUpper, projectionEtaLower + 1e-6), scalar(1.0));
+projectionEtaEps = Foam::max(projectionEtaEps, scalar(1e-8));
+projectionEtaLower = Foam::max(projectionEtaLower, projectionEtaEps);
+projectionEtaUpper = Foam::min(projectionEtaUpper, scalar(1.0)-projectionEtaEps);
+if (projectionEtaUpper <= projectionEtaLower)
+{
+  projectionEtaUpper = Foam::min(projectionEtaLower + 10.0*projectionEtaEps, scalar(1.0)-projectionEtaEps);
+  if (projectionEtaUpper <= projectionEtaLower)
+  {
+    projectionEtaLower = projectionEtaEps;
+    projectionEtaUpper = scalar(1.0)-projectionEtaEps;
+  }
+}
 projectionEtaTolerance = Foam::max(projectionEtaTolerance, scalar(1e-8));
 projectionUpdateInterval = Foam::max(projectionUpdateInterval, label(1));
 projectionObjectiveTolForBeta = Foam::max(projectionObjectiveTolForBeta, scalar(1e-8));

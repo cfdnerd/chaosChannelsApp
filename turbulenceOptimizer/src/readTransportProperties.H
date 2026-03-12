@@ -155,6 +155,15 @@ if (temperatureUpperBound <= temperatureLowerBound)
 adjointHeatSourceClip = Foam::max(adjointHeatSourceClip, scalar(SMALL));
 turbulenceModelCmu = Foam::max(turbulenceModelCmu, scalar(1e-6));
 
+if (!turbulenceProMode)
+{
+  // Non-publication safety heuristics are centrally gated by turbulenceProMode.
+  enforceTurbulenceBounds = false;
+  enableThermalDivergenceGuard = false;
+  clipTemperatureField = false;
+  enableAdjointHeatSourceClipping = false;
+}
+
 volScalarField tbBcSmoothingMode
 (
     IOobject
@@ -173,7 +182,8 @@ tbBcSmoothingMode.correctBoundaryConditions();
 Info<< "Inlet speed [m/s]: " << inletSpeed
     << " with direction " << inletVelocityDirection << endl;
 Info<< "turbulenceProMode: " << (turbulenceProMode ? "on" : "off") << endl;
-Info<< "Heuristic stabilizers: always enabled"
+Info<< "Heuristic stabilizers: "
+    << (turbulenceProMode ? "enabled" : "disabled")
     << " (turbulence bounds / clipping / divergence guarding)" << endl;
 Info<< "tbBcSmoothingMode: "
     << (enableTbBcSmoothingMode ? "enabled" : "disabled")

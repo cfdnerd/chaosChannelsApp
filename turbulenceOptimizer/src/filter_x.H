@@ -59,12 +59,33 @@ else
       projectionBetaMax
     );
 }
-eta0=projectionEtaLower;
-eta1=projectionEtaUpper;
+eta0=Foam::min(Foam::max(projectionEtaLower, projectionEtaEps), scalar(1.0)-projectionEtaEps);
+eta1=Foam::min(Foam::max(projectionEtaUpper, projectionEtaEps), scalar(1.0)-projectionEtaEps);
+if (eta1 <= eta0)
+{
+  eta0 = projectionEtaEps;
+  eta1 = scalar(1.0)-projectionEtaEps;
+}
 y0=diff(xp,mesh.V(),del,eta0,n);
 reduce(y0, sumOp<scalar>());
 scalar y1=diff(xp,mesh.V(),del,eta1,n);
 reduce(y1, sumOp<scalar>());
+if
+(
+  !std::isfinite(static_cast<double>(del))
+ || !std::isfinite(static_cast<double>(y0))
+ || !std::isfinite(static_cast<double>(y1))
+)
+{
+  FatalErrorInFunction
+    << "Non-finite projection state detected:"
+    << " del=" << del
+    << " y0=" << y0
+    << " y1=" << y1
+    << " eta0=" << eta0
+    << " eta1=" << eta1
+    << exit(FatalError);
+}
 const bool etaBracketed = (y0*y1 <= 0.0);
 const label projectionEtaMaxIterations(100);
 label projectionEtaIterations(0);
@@ -80,6 +101,13 @@ else
     eta5=(eta0+eta1)/2.0;
     y5=diff(xp,mesh.V(),del,eta5,n);
     reduce(y5, sumOp<scalar>());
+    if (!std::isfinite(static_cast<double>(y5)))
+    {
+      FatalErrorInFunction
+        << "Non-finite projection root function value at eta5=" << eta5
+        << ", del=" << del
+        << exit(FatalError);
+    }
     if(y0*y5<0)
     {
       eta1=eta5;
@@ -93,15 +121,31 @@ else
   } while ((eta1-eta0)>projectionEtaTolerance && projectionEtaIterations < projectionEtaMaxIterations);
 }
 
+eta5 = Foam::min(Foam::max(eta5, projectionEtaEps), scalar(1.0)-projectionEtaEps);
+const scalar etaDenominator = Foam::max(eta5, projectionEtaEps);
+const scalar oneMinusEtaDenominator = Foam::max(scalar(1.0)-eta5, projectionEtaEps);
 for(i=0;i<n;i++)
 {
-   if(xp[i]<=eta5)
+   const scalar xpClamped = Foam::min(Foam::max(xp[i], scalar(0.0)), scalar(1.0));
+   if(xpClamped<=eta5)
    {
-     xh[i]=eta5*(Foam::exp(-del*(1-xp[i]/eta5))-(1-xp[i]/eta5)*Foam::exp(-del)); 
+     const scalar ratio = xpClamped/etaDenominator;
+     xh[i]=eta5*(Foam::exp(-del*(1-ratio))-(1-ratio)*Foam::exp(-del));
    }
    else
    {
-     xh[i]=eta5+(1-eta5)*(1-Foam::exp(-del*(xp[i]-eta5)/(1-eta5))+(xp[i]-eta5)*Foam::exp(-del)/(1-eta5));
+     const scalar ratio = (xpClamped-eta5)/oneMinusEtaDenominator;
+     xh[i]=eta5+(1-eta5)*(1-Foam::exp(-del*ratio)+ratio*Foam::exp(-del));
+   }
+   if (!std::isfinite(static_cast<double>(xh[i])))
+   {
+     FatalErrorInFunction
+       << "Non-finite xh in projection at cell " << i
+       << " (xp=" << xp[i]
+       << ", xpClamped=" << xpClamped
+       << ", eta5=" << eta5
+       << ", del=" << del << ")"
+       << exit(FatalError);
    }
    xh[i]=Foam::min(Foam::max(xh[i],rhoMin),scalar(1.0));
 }
