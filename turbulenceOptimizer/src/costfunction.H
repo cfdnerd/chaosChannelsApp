@@ -53,7 +53,9 @@ maxT = maxTCase;
 
 if (normalizeScenarioObjectives)
 {
-  if (!objectiveIterationOneReferenceCaptured)
+  const bool finiteMeanT = std::isfinite(static_cast<double>(meanTCase));
+  const bool finitePowerDiss = std::isfinite(static_cast<double>(powerDissCase));
+  if (!objectiveIterationOneReferenceCaptured && finiteMeanT)
   {
     objectiveIterationOneReference = Foam::max(Foam::mag(meanTCase), scalar(SMALL));
     objectiveIterationOneReferenceCaptured = true;
@@ -63,7 +65,7 @@ if (normalizeScenarioObjectives)
           << ": " << objectiveIterationOneReference << endl;
     }
   }
-  if (!powerIterationOneReferenceCaptured)
+  if (!powerIterationOneReferenceCaptured && finitePowerDiss)
   {
     powerIterationOneReference = Foam::max(Foam::mag(powerDissCase), scalar(SMALL));
     powerIterationOneReferenceCaptured = true;
@@ -73,14 +75,18 @@ if (normalizeScenarioObjectives)
           << ": " << powerIterationOneReference << endl;
     }
   }
+  const scalar objectiveFallbackReference =
+    finiteMeanT ? Foam::max(Foam::mag(meanTCase), scalar(SMALL)) : scalar(1.0);
+  const scalar powerFallbackReference =
+    finitePowerDiss ? Foam::max(Foam::mag(powerDissCase), scalar(SMALL)) : scalar(1.0);
   const scalar objectiveReference =
     objectiveIterationOneReferenceCaptured
     ? objectiveIterationOneReference
-    : Foam::max(Foam::mag(meanTCase), scalar(SMALL));
+    : objectiveFallbackReference;
   const scalar powerReference =
     powerIterationOneReferenceCaptured
     ? powerIterationOneReference
-    : Foam::max(Foam::mag(powerDissCase), scalar(SMALL));
+    : powerFallbackReference;
   MeanT = meanTCase/Foam::max(objectiveReference, scalar(SMALL));
   PowerDiss = powerDissCase/Foam::max(powerReference, scalar(SMALL));
 }

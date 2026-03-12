@@ -60,6 +60,7 @@ alphaMax.value() =
   alphaMax.value() + continuationBlend*(alphaTargetValue-alphaMax.value());
 
 const scalar quPrevious(qu);
+const scalar quContinuationBlend = continuationBlendFast;
 scalar quTarget(quStage1Value);
 if(opt<quStage1Iteration)
 {
@@ -92,7 +93,7 @@ else
     quTarget = quStage4Value;
   }
 }
-qu = quPrevious + continuationBlend*(quTarget-quPrevious);
+qu = quPrevious + quContinuationBlend*(quTarget-quPrevious);
 qu = Foam::min(qu,quMax);
 
 scalar filterSchedule(1.0);

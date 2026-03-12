@@ -61,19 +61,14 @@ if (adaptiveHeavisideProjection)
 }
 else
 {
-  // Conservative deterministic continuation with feasibility-gated growth.
+  // Deterministic continuation: keep sharpening active in non-adaptive mode.
   if (opt == 1)
   {
     del = projectionBetaInitial;
   }
-  else if (projectionUpdateIteration && allowProjectionContinuation)
+  else if (projectionUpdateIteration)
   {
     del = Foam::min(del*projectionBetaGrowthFactor, projectionBetaMax);
-  }
-  else if (projectionUpdateIteration && !allowProjectionContinuation)
-  {
-    // Under constraint stress, grow slowly instead of freezing at beta=1.
-    del = Foam::min(Foam::max(del*projectionSoftGrowthFactor, projectionBetaInitial), projectionBetaMax);
   }
   else
   {

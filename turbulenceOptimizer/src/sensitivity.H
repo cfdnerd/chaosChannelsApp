@@ -43,9 +43,24 @@ if (normalizeScenarioObjectives)
 
 const scalar tighteningIterations =
   scalar(Foam::max(opt - powerConstraintTighteningStartIteration, label(0)));
+scalar powerConstraintRelaxLimit(PowerDissRelax);
+scalar powerConstraintHardLimit(PowerDissMax);
+scalar powerConstraintTighteningRateLocal(powerConstraintTighteningRate);
+if (normalizeScenarioObjectives)
+{
+  const scalar normalizationRef = Foam::max(powerConstraintReference, scalar(SMALL));
+  powerConstraintRelaxLimit /= normalizationRef;
+  powerConstraintHardLimit /= normalizationRef;
+  powerConstraintTighteningRateLocal /= normalizationRef;
+}
 const scalar powerConstraintDenominatorRaw =
-  Foam::max(PowerDissRelax - powerConstraintTighteningRate*tighteningIterations, PowerDissMax);
-const scalar powerConstraintDenominator = powerConstraintDenominatorRaw;
+  Foam::max
+  (
+    powerConstraintRelaxLimit - powerConstraintTighteningRateLocal*tighteningIterations,
+    powerConstraintHardLimit
+  );
+const scalar powerConstraintDenominator =
+  Foam::max(powerConstraintDenominatorRaw, scalar(SMALL));
 const scalar weightedPowerConstraint =
   optPowerConstraintWeight*(powerConstraintNormalized/powerConstraintDenominator-1.0);
 const scalar weightedVolumeConstraint = optVolumeConstraintWeight*V;
