@@ -26,7 +26,45 @@ int main(int argc, char *argv[])
     {
         #include "solverConvergenceReset.H"
         #include "update.H"
-        #include "applyInletCase.H"
+        // Apply inlet velocity and turbulence inlet state for this single-case run.
+        const vector caseInletVelocity = inletVelocityDirection*inletSpeed;
+        U.boundaryFieldRef()[inletPatchID] = caseInletVelocity;
+        Ua.boundaryFieldRef()[inletPatchID] = caseInletVelocity;
+
+        if (updateTurbulenceInletFromVelocity)
+        {
+            const scalar currentInletSpeed = Foam::max(mag(caseInletVelocity), scalar(SMALL));
+            const scalar turbulenceK =
+                Foam::max(1.5*Foam::sqr(turbulenceIntensity*currentInletSpeed), kMinBound);
+            const scalar turbulenceEpsilon =
+                Foam::max
+                (
+                    Foam::pow(turbulenceModelCmu, 0.75)
+                    *Foam::pow(turbulenceK, 1.5)
+                    /Foam::max(turbulenceLengthScale, scalar(SMALL)),
+                    epsilonMinBound
+                );
+            if
+            (
+                mesh.foundObject<volScalarField>("k")
+                &&
+                mesh.foundObject<volScalarField>("epsilon")
+            )
+            {
+                volScalarField& kField =
+                    const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("k"));
+                volScalarField& epsilonField =
+                    const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("epsilon"));
+                kField.boundaryFieldRef()[inletPatchID] = turbulenceK;
+                epsilonField.boundaryFieldRef()[inletPatchID] = turbulenceEpsilon;
+            }
+        }
+
+        U.correctBoundaryConditions();
+        Ua.correctBoundaryConditions();
+
+        Info<< "Running single-case optimization with inlet speed "
+            << inletSpeed << " m/s" << endl;
         #include "Primal_U.H"
         if (stopOptimization)
         {
