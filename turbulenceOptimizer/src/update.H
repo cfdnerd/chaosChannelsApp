@@ -32,14 +32,27 @@ if(opt>alphaGrowthStartIteration)
 {
   alphaMax=alphaMax*alphaGrowthFactor;
 }
-alphaMax.value()=Foam::min(alphaMax.value(),alphaMAX.value());
-if(opt>=quRampStartIteration)
+alphaMax.value()=
+  Foam::min
+  (
+    alphaMax.value(),
+    Foam::min(alphaMAX.value(), alphamax.value()*alphaContinuationCapMultiplier)
+  );
+if(opt<quStage1Iteration)
 {
-  qu=quInitial+(opt-quRampStartIteration)*quGrowthRate;
+  qu=quStage1Value;
+}
+else if(opt<quStage2Iteration)
+{
+  qu=quStage2Value;
+}
+else if(opt<quStage3Iteration)
+{
+  qu=quStage3Value;
 }
 else
 {
-  qu=quInitial;
+  qu=quStage4Value;
 }
 qu=Foam::min(qu,quMax);
 

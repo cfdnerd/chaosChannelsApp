@@ -78,22 +78,30 @@ scalar rhoMin(1e-3);
 scalar projectionBetaRate(0.2);
 scalar projectionBetaMax(100.0);
 scalar projectionBetaInitial(1.0);
+scalar projectionBetaGrowthFactor(1.5);
 scalar projectionEtaLower(1e-4);
 scalar projectionEtaUpper(1.0);
 scalar projectionEtaTolerance(1e-4);
-label projectionUpdateInterval(5);
+label projectionUpdateInterval(25);
 scalar projectionObjectiveTolForBeta(5e-3);
 scalar projectionStepTolForBeta(5e-3);
 label powerConstraintTighteningStartIteration(0);
-scalar powerConstraintTighteningRate(0.2);
-scalar alphaRampDivisor(7.0);
-label alphaRampIterations(63);
-label alphaGrowthStartIteration(100);
-scalar alphaGrowthFactor(1.05);
-scalar quInitial(0.005);
-label quRampStartIteration(80);
-scalar quGrowthRate(1e-4);
-scalar quMax(0.01);
+scalar powerConstraintTighteningRate(0.0);
+scalar alphaRampDivisor(40.0);
+label alphaRampIterations(80);
+label alphaGrowthStartIteration(1000000);
+scalar alphaGrowthFactor(1.0);
+scalar alphaContinuationCapMultiplier(4.0);
+// Staged q-continuation to suppress gray designs without runaway alpha growth.
+scalar quInitial(0.01);
+label quStage1Iteration(50);
+label quStage2Iteration(100);
+label quStage3Iteration(150);
+scalar quStage1Value(0.01);
+scalar quStage2Value(0.1);
+scalar quStage3Value(1.0);
+scalar quStage4Value(10.0);
+scalar quMax(10.0);
 scalar filterRStart(filterR);
 scalar filterREnd(filterR);
 label filterRContinuationStart(0);
@@ -101,6 +109,7 @@ label filterRContinuationEnd(1);
 // Continuation/projection tuning is intentionally hardcoded.
 rhoMin = Foam::min(Foam::max(rhoMin, scalar(1e-6)), scalar(0.25));
 projectionBetaInitial = Foam::max(projectionBetaInitial, scalar(1e-6));
+projectionBetaGrowthFactor = Foam::max(projectionBetaGrowthFactor, scalar(1.0));
 projectionEtaLower = Foam::max(projectionEtaLower, scalar(1e-8));
 projectionEtaUpper = Foam::min(Foam::max(projectionEtaUpper, projectionEtaLower + 1e-6), scalar(1.0));
 projectionEtaTolerance = Foam::max(projectionEtaTolerance, scalar(1e-8));
@@ -118,9 +127,16 @@ powerConstraintTighteningStartIteration =
 powerConstraintTighteningRate = Foam::max(powerConstraintTighteningRate, scalar(0.0));
 alphaRampDivisor = Foam::max(alphaRampDivisor, scalar(1.0));
 alphaGrowthFactor = Foam::max(alphaGrowthFactor, scalar(1.0));
+alphaContinuationCapMultiplier = Foam::max(alphaContinuationCapMultiplier, scalar(1.0));
 quInitial = Foam::max(quInitial, scalar(1e-6));
-quGrowthRate = Foam::max(quGrowthRate, scalar(0.0));
-quMax = Foam::max(quMax, quInitial);
+quStage1Iteration = Foam::max(quStage1Iteration, label(1));
+quStage2Iteration = Foam::max(quStage2Iteration, quStage1Iteration + 1);
+quStage3Iteration = Foam::max(quStage3Iteration, quStage2Iteration + 1);
+quStage1Value = Foam::max(quStage1Value, scalar(1e-6));
+quStage2Value = Foam::max(quStage2Value, quStage1Value);
+quStage3Value = Foam::max(quStage3Value, quStage2Value);
+quStage4Value = Foam::max(quStage4Value, quStage3Value);
+quMax = Foam::max(quMax, quStage4Value);
 filterRStart = Foam::max(filterRStart, scalar(1e-6));
 filterREnd = Foam::max(filterREnd, scalar(1e-6));
 if (optPowerConstraintWeight <= 0.0)
@@ -140,6 +156,15 @@ if (optVolumeConstraintWeight <= 0.0)
 Info<< "normalizeScenarioObjectives: "
     << (normalizeScenarioObjectives ? "enabled" : "disabled")
     << " (first valid-iteration fixed MeanT/PDCon scaling)" << endl;
+Info<< "Continuation settings: alphaRampDivisor=" << alphaRampDivisor
+    << ", alphaRampIterations=" << alphaRampIterations
+    << ", alphaCapMultiplier=" << alphaContinuationCapMultiplier
+    << ", betaUpdateInterval=" << projectionUpdateInterval
+    << ", betaGrowthFactor=" << projectionBetaGrowthFactor
+    << ", betaMax=" << projectionBetaMax
+    << ", qStages=[" << quStage1Value << "," << quStage2Value
+    << "," << quStage3Value << "," << quStage4Value << "]"
+    << endl;
 Info<< "Reading pseudo-density field\n" << endl;
 volScalarField xp
 (

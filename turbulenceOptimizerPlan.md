@@ -63,6 +63,9 @@ Observed validated principles:
 3. Filtering and projection continuation
    - Keep existing Helmholtz filtering and projection strategy.
    - Increase projection sharpness only in late iterations.
+   - Use conservative beta continuation (multiplicative growth, capped).
+   - Use staged q-continuation for Brinkman interpolation (e.g., 0.01 -> 0.1 -> 1 -> 10).
+   - Keep alphaMax continuation bounded; avoid late-iteration exponential growth that can destabilize pressure-drop constraints.
    - Tune filter radius and projection beta independently.
 
 4. Sensitivity stabilization
