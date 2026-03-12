@@ -234,8 +234,10 @@ if (objFunction == 2)
     objectiveValue = 0;
   }
 }
-const scalar objectiveDelta = hasPreviousObjectiveValue ? objectiveValue - previousObjectiveValue : 0;
-previousObjectiveValue = objectiveValue;
+const scalar projectionObjectiveValue = objectiveNormalized;
+const scalar objectiveDelta =
+  hasPreviousObjectiveValue ? projectionObjectiveValue - previousObjectiveValue : 0;
+previousObjectiveValue = projectionObjectiveValue;
 hasPreviousObjectiveValue = true;
 
 label solverSeverity(0);
@@ -253,7 +255,8 @@ solverSeverity = Foam::max(solverSeverity, linearSolveSeverityFromStats(gsensPow
 solverSeverity = Foam::max(solverSeverity, linearSolveSeverityFromStats(gsensVolFilterLinearSolveStats));
 reduce(solverSeverity, maxOp<label>());
 
-const scalar objectiveRelativeDelta = Foam::mag(objectiveDelta)/Foam::max(Foam::mag(objectiveValue), SMALL);
+const scalar objectiveRelativeDelta =
+  Foam::mag(objectiveDelta)/Foam::max(Foam::mag(projectionObjectiveValue), SMALL);
 const scalar powerConstraintWeightSafe = Foam::max(optPowerConstraintWeight, SMALL);
 const scalar powerConstraintMargin = gx[0]/powerConstraintWeightSafe;
 const scalar volumeConstraintWeightSafe = Foam::max(optVolumeConstraintWeight, SMALL);

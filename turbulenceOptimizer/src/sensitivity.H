@@ -43,8 +43,10 @@ if (scenarioI == nVelocityScenarios-1)
   gsenshPowerDiss = gsenshPowerScenarioAccum;
   #include "filter_chainrule.H"
 
+  const scalar tighteningIterations =
+    scalar(Foam::max(opt - powerConstraintTighteningStartIteration, label(0)));
   const scalar powerConstraintDenominator =
-    Foam::max(PowerDissRelax-opt*0.2, PowerDissMax);
+    Foam::max(PowerDissRelax - powerConstraintTighteningRate*tighteningIterations, PowerDissMax);
   const scalar weightedPowerConstraint =
     optPowerConstraintWeight*(powerConstraintNormalized/powerConstraintDenominator-1.0);
   const scalar weightedVolumeConstraint = optVolumeConstraintWeight*V;

@@ -20,10 +20,6 @@ if (adaptiveHeavisideProjection)
   }
   reduce(maxAbsXStepForProjectionLocal, maxOp<scalar>());
 
-  const scalar powerConstraintLimitForProjection =
-    Foam::max(Foam::max(PowerDissRelax-opt*0.2, PowerDissMax), scalar(SMALL));
-  const scalar powerConstraintViolationForProjection =
-    Foam::max(powerConstraintNormalized/powerConstraintLimitForProjection - 1.0, scalar(0.0));
   scalar objectiveRelativeDeltaForProjection(GREAT);
   if (hasPreviousObjectiveValue)
   {
@@ -38,13 +34,6 @@ if (adaptiveHeavisideProjection)
     objectiveRelativeDeltaForProjection <= projectionObjectiveTolForBeta
     &&
     maxAbsXStepForProjectionLocal <= projectionStepTolForBeta;
-  if (projectionRequireConstraintForBeta)
-  {
-    projectionUpdateStable =
-      projectionUpdateStable
-      &&
-      powerConstraintViolationForProjection <= projectionConstraintTolForBeta;
-  }
 
   if (opt == 1)
   {
