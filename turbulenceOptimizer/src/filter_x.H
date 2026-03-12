@@ -49,7 +49,8 @@ if (adaptiveHeavisideProjection)
   }
   else if (projectionUpdateIteration && !allowProjectionContinuation)
   {
-    del = Foam::max(del/projectionBetaGrowthFactor, projectionBetaInitial);
+    // Hold current projection sharpness while infeasible (avoid regression to gray).
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
   }
   else
   {
@@ -69,7 +70,8 @@ else
   }
   else if (projectionUpdateIteration && !allowProjectionContinuation)
   {
-    del = Foam::max(del/projectionBetaGrowthFactor, projectionBetaInitial);
+    // Hold current projection sharpness while infeasible (avoid regression to gray).
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
   }
   else
   {

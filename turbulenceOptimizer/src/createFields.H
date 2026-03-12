@@ -110,6 +110,7 @@ scalar continuationBlendFast(0.25);
 scalar continuationBlendSlow(0.05);
 scalar mmaConstraintDampingGain(1.5);
 scalar mmaConstraintDampingMin(0.3);
+scalar mmaConstraintDampingActivation(0.3);
 scalar filterRStart(filterR);
 scalar filterREnd(filterR);
 label filterRContinuationStart(0);
@@ -166,6 +167,31 @@ continuationBlendSlow =
 mmaConstraintDampingGain = Foam::max(mmaConstraintDampingGain, scalar(0.0));
 mmaConstraintDampingMin =
   Foam::min(Foam::max(mmaConstraintDampingMin, scalar(1e-3)), scalar(1.0));
+mmaConstraintDampingActivation =
+  Foam::max(mmaConstraintDampingActivation, scalar(0.0));
+
+if (!normalizeScenarioObjectives)
+{
+  // app mode profile (normalizeScenarioObjectives=no): keep evolution active.
+  projectionConstraintViolationTolForBeta = 1.0;
+  continuationConstraintViolationFreeze = 1.0;
+  continuationBlendFast = 0.35;
+  continuationBlendSlow = 0.15;
+  mmaConstraintDampingGain = 0.35;
+  mmaConstraintDampingMin = 0.60;
+  mmaConstraintDampingActivation = 0.60;
+}
+else
+{
+  // nso mode profile (normalizeScenarioObjectives=yes): conservative stabilization.
+  projectionConstraintViolationTolForBeta = Foam::min(projectionConstraintViolationTolForBeta, scalar(0.1));
+  continuationConstraintViolationFreeze = Foam::min(continuationConstraintViolationFreeze, scalar(0.1));
+  continuationBlendFast = Foam::min(continuationBlendFast, scalar(0.25));
+  continuationBlendSlow = Foam::min(continuationBlendSlow, scalar(0.05));
+  mmaConstraintDampingGain = Foam::max(mmaConstraintDampingGain, scalar(1.5));
+  mmaConstraintDampingMin = Foam::max(mmaConstraintDampingMin, scalar(0.3));
+  mmaConstraintDampingActivation = Foam::min(mmaConstraintDampingActivation, scalar(0.3));
+}
 filterRStart = Foam::max(filterRStart, scalar(1e-6));
 filterREnd = Foam::max(filterREnd, scalar(1e-6));
 if (optPowerConstraintWeight <= 0.0)
@@ -193,6 +219,16 @@ Info<< "Continuation settings: alphaRampDivisor=" << alphaRampDivisor
     << ", betaMax=" << projectionBetaMax
     << ", qStages=[" << quStage1Value << "," << quStage2Value
     << "," << quStage3Value << "," << quStage4Value << "]"
+    << endl;
+Info<< "Mode profile: "
+    << (normalizeScenarioObjectives ? "nso(normalized)" : "app(non-normalized)")
+    << " with projectionConstraintViolationTolForBeta="
+    << projectionConstraintViolationTolForBeta
+    << ", continuationConstraintViolationFreeze="
+    << continuationConstraintViolationFreeze
+    << ", mmaConstraintDampingGain=" << mmaConstraintDampingGain
+    << ", mmaConstraintDampingMin=" << mmaConstraintDampingMin
+    << ", mmaConstraintDampingActivation=" << mmaConstraintDampingActivation
     << endl;
 Info<< "Reading pseudo-density field\n" << endl;
 volScalarField xp

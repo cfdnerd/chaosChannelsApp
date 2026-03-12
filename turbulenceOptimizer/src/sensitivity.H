@@ -73,13 +73,15 @@ Info<< "\n run MMA \n" << endl;
 mma.MMAsolver(xmma, dfdx, gx, dgdx);
 const scalar mmaPowerConstraintViolation =
   Foam::max(weightedPowerConstraint, scalar(0.0));
+const scalar mmaDampingViolation =
+  Foam::max(mmaPowerConstraintViolation - mmaConstraintDampingActivation, scalar(0.0));
 const scalar mmaStepDamping =
   Foam::max
   (
     mmaConstraintDampingMin,
     scalar(1.0)
    /(
-      scalar(1.0) + mmaConstraintDampingGain*mmaPowerConstraintViolation
+      scalar(1.0) + mmaConstraintDampingGain*mmaDampingViolation
     )
   );
 for(i=0;i<n;i++)
