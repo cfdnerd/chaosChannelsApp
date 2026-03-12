@@ -30,18 +30,28 @@ int main(int argc, char *argv[])
         scalar currentInletSpeedForLog(inletSpeed);
         if (updateTurbulenceInletFromVelocity)
         {
-            scalar currentInletSpeedLocal(0.0);
+            scalar currentInletSpeedSumLocal(0.0);
+            label currentInletFaceCountLocal(0);
             const auto& inletU = U.boundaryField()[inletPatchID];
             if (inletU.size() > 0)
             {
                 forAll(inletU, faceI)
                 {
-                    currentInletSpeedLocal += mag(inletU[faceI]);
+                    currentInletSpeedSumLocal += mag(inletU[faceI]);
                 }
-                currentInletSpeedLocal /= scalar(inletU.size());
+                currentInletFaceCountLocal = inletU.size();
             }
-            const scalar currentInletSpeed =
-                Foam::max(currentInletSpeedLocal, scalar(SMALL));
+            scalar currentInletSpeedSumGlobal(currentInletSpeedSumLocal);
+            label currentInletFaceCountGlobal(currentInletFaceCountLocal);
+            reduce(currentInletSpeedSumGlobal, sumOp<scalar>());
+            reduce(currentInletFaceCountGlobal, sumOp<label>());
+            scalar currentInletSpeed(inletSpeed);
+            if (currentInletFaceCountGlobal > 0)
+            {
+                currentInletSpeed =
+                    currentInletSpeedSumGlobal/scalar(currentInletFaceCountGlobal);
+            }
+            currentInletSpeed = Foam::max(currentInletSpeed, scalar(SMALL));
             currentInletSpeedForLog = currentInletSpeed;
             const scalar turbulenceK =
                 Foam::max(1.5*Foam::sqr(turbulenceIntensity*currentInletSpeed), kMinBound);
