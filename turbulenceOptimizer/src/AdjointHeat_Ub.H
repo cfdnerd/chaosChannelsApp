@@ -1,8 +1,4 @@
 volScalarField adjointNuEffUb(turbulence->nuEff());
-if (!frozenTurbulenceAdjoint)
-{
-  adjointNuEffUb = nu;
-}
 volScalarField alphaEffAdjUb(alpha*alphaResistanceScale);
 volScalarField TbSource(Tb);
 if (enableAdjointHeatSourceClipping)

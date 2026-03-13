@@ -175,21 +175,25 @@ While the core plan successfully establishes a foundation based on the frozen-tu
 - **Why this Critical:** Attempting to algebraically resolve the viscous sub-layer ($$y^+ \approx 1$$) over hundreds of transiently evolving 3D microchannel structures will explode the required mesh count beyond computationally viable thresholds for continuous-adjoint frameworks. 
 - **Improvement:** The framework **must** categorically abandon deep boundary layer resolution in favor of High-Reynolds standard wall functions (e.g., `kqRWallFunction`, `epsilonWallFunction`, `nutkWallFunction`). This keeps the mesh size constrained and allows the gradient solver to focus entirely on optimizing macro-scale topologies rather than repeatedly crashing on micro-fluctuations in boundary heat transfer.
 
-## 8B) Observed Flaws in the Reference `turbulenceOptimizer` Implementation
+## 8B) Observed Gaps in the Reference `turbulenceOptimizer` Implementation
 
-An examination of the existing `turbulenceOptimizer` source code reveals three massive formulation and implementation bugs that cause instability. Any future implementation must actively avoid these pitfalls:
+An examination of the existing `turbulenceOptimizer` source code reveals a mix of verified code defects and formulation gaps. Any future implementation must actively avoid these pitfalls:
 
-### 1. Complete Absence of Turbulent Thermal Diffusion
-- **The Bug:** Solvers like `Primal_T.H` and `AdjointHeat_Tb.H` mistakenly use only the molecular thermal diffusivity (`fvm::laplacian(DT, T)`). 
-- **The Flaw:** Internal turbulent core heat transfer is dominated by turbulent mixing, not molecular conduction. Failing to inject `nut / Prt` into the effective thermal diffusivity (`DTeff`) causes the solver to treat cooling physics as purely laminar, rendering the optimizer blind to the primary heat exchange mechanism.
+### 1. Missing Effective Turbulent Thermal Diffusion
+- **Verified code defect:** The heat equations must use the effective thermal diffusivity `DTeff = DT + nut/Prt` rather than molecular/design diffusivity alone.
+- **Impact:** Using only `DT` laminarizes the dominant turbulent heat-mixing mechanism and biases both the primal thermal field and the heat adjoint.
 
-### 2. Misdirected Turbulence Penalization via Velocity Scaling
-- **The Bug:** `Primal_U.H` attempts to prevent unphysical turbulence by hacking the Darcy drag: `alphaResistanceScale = 1.0 + factor * nutByNu`.
-- **The Flaw:** This is a numerical band-aid that tackles the symptom rather than penalizing the `k` and `epsilon` transport generation directly. Without source penalization in the solid domains, unphysical pseudo-turbulence generates endlessly, corrupting fluid boundaries and destroying the continuous adjoint assumptions over iterations.
+### 2. Incomplete Turbulence Suppression in Solid-Like Regions
+- **Verified formulation gap:** `Primal_U.H` scales Darcy resistance using turbulence intensity (`alphaResistanceScale = 1 + factor*nut/nu`), but this does not directly suppress `k` and `epsilon` production/dissipation in low-density regions.
+- **Impact:** This is an indirect stabilizer, not a substitute for design-dependent source penalization in the turbulence transport equations.
 
-### 3. Aggressive Scalar Field Clipping Causing Adjoint Tearing
-- **The Bug:** To stop diverging `k` and `epsilon` (caused by the previous flaw), `Primal_U.H` forcibly overwrites out-of-bounds primitive field values via algebraic loops (`Foam::max(originalK, kMinBound)`).
-- **The Flaw:** In gradient-based topology optimization (calculating sensitivities via continuous derivatives), manually overwriting solver field values destroys the mathematical continuity (gradient chain rule) of the spatial simulations. This causes "tearing" or "checkerboarding" in the sensitivity fields during `MMA` optimization, eventually stalling the optimizer. Ensure bounding securely operates strictly inside implicit matrix solvers or via continuous penalization.
+### 3. Optional Post-Solve Turbulence Clipping
+- **Verified implementation risk:** The hard clipping of `k`, `epsilon`, and `nut` in `Primal_U.H` only applies when `enforceTurbulenceBounds` is enabled. It is a fallback guard, not part of the default formulation.
+- **Impact:** When enabled, the post-solve overwrites make the primal map nonsmooth and should not be treated as a sensitivity-consistent stabilization method.
+
+### 4. Supported Adjoint Model Must Be Declared Explicitly
+- **Verified implementation gap:** The adjoint currently only supports the frozen-turbulence transport approximation; a true differentiated turbulence adjoint is not implemented.
+- **Impact:** The code should expose the supported mode explicitly and fail fast if an unsupported alternative is requested, rather than silently reverting to a laminar adjoint transport model.
 
 ## 9) Implementation checklist
 

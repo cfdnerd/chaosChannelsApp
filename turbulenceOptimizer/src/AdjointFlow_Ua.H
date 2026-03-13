@@ -1,8 +1,4 @@
 volScalarField adjointNuEffUa(turbulence->nuEff());
-if (!frozenTurbulenceAdjoint)
-{
-  adjointNuEffUa = nu;
-}
 volScalarField alphaEffAdjUa(alpha*alphaResistanceScale);
 
 for(i=0;i<adjointFlowIterations;i++)

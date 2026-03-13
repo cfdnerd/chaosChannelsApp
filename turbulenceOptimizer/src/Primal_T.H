@@ -49,10 +49,12 @@ auto evaluateThermalField =
 };
 
 T = T2;
+DTeff = DT + turbulence->nut()/thermalTurbulentPrandtl;
+DTeff.correctBoundaryConditions();
 fvScalarMatrix TEqn
 (
     fvm::div(phi,T)
-   -fvm::laplacian(DT, T)
+   -fvm::laplacian(DTeff, T)
 );
 if(DDHS)
 {
@@ -119,7 +121,7 @@ if (thermalFallbackTrigger)
       T = thermalFallbackBlend*T2 + (1.0 - thermalFallbackBlend)*T;
       T.correctBoundaryConditions();
 
-      volScalarField DTFallback(DT);
+      volScalarField DTFallback(DTeff);
       if (thermalFallbackDiffusivityFactor > 1.0)
       {
         DTFallback *= thermalFallbackDiffusivityFactor;
