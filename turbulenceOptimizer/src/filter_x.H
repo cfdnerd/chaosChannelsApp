@@ -22,31 +22,30 @@ const scalar projectionConstraintViolation =
   Foam::max(weightedPowerConstraint, scalar(0.0));
 const bool allowProjectionContinuation =
   projectionConstraintViolation <= projectionConstraintViolationTolForBeta;
+scalar maxAbsXStepForProjectionLocal(0.0);
+for(i=0;i<n;i++)
+{
+  maxAbsXStepForProjectionLocal =
+    Foam::max(maxAbsXStepForProjectionLocal, Foam::mag(x[i] - xOld[i]));
+}
+reduce(maxAbsXStepForProjectionLocal, maxOp<scalar>());
+
+scalar objectiveRelativeDeltaForProjection(GREAT);
+if (hasPreviousObjectiveValue)
+{
+  objectiveRelativeDeltaForProjection =
+    Foam::mag(objectiveNormalized-previousObjectiveValue)
+   /Foam::max(Foam::mag(objectiveNormalized), scalar(SMALL));
+}
+
+const bool projectionUpdateStable =
+  objectiveRelativeDeltaForProjection <= projectionObjectiveTolForBeta
+  &&
+  maxAbsXStepForProjectionLocal <= projectionStepTolForBeta;
 const scalar projectionSoftGrowthFactor =
   scalar(1.0) + scalar(0.15)*(projectionBetaGrowthFactor - scalar(1.0));
 if (adaptiveHeavisideProjection)
 {
-  scalar maxAbsXStepForProjectionLocal(0.0);
-  for(i=0;i<n;i++)
-  {
-    maxAbsXStepForProjectionLocal =
-      Foam::max(maxAbsXStepForProjectionLocal, Foam::mag(x[i] - xOld[i]));
-  }
-  reduce(maxAbsXStepForProjectionLocal, maxOp<scalar>());
-
-  scalar objectiveRelativeDeltaForProjection(GREAT);
-  if (hasPreviousObjectiveValue)
-  {
-    objectiveRelativeDeltaForProjection =
-      Foam::mag(objectiveNormalized-previousObjectiveValue)
-     /Foam::max(Foam::mag(objectiveNormalized), scalar(SMALL));
-  }
-
-  bool projectionUpdateStable =
-    objectiveRelativeDeltaForProjection <= projectionObjectiveTolForBeta
-    &&
-    maxAbsXStepForProjectionLocal <= projectionStepTolForBeta;
-
   if (opt == 1)
   {
     del = projectionBetaInitial;
@@ -72,13 +71,18 @@ else
   {
     del = projectionBetaInitial;
   }
-  else if (projectionUpdateIteration && allowProjectionContinuation)
+  else if (projectionUpdateIteration && projectionUpdateStable && allowProjectionContinuation)
   {
     del = Foam::min(del*projectionBetaGrowthFactor, projectionBetaMax);
   }
   else if (projectionUpdateIteration && !allowProjectionContinuation)
   {
     // Hold projection sharpness when power-drop constraint is stressed.
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
+  }
+  else if (projectionUpdateIteration && !projectionUpdateStable)
+  {
+    // Do not sharpen the design while the optimizer is still taking large steps.
     del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
   }
   else

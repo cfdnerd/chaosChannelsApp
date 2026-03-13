@@ -190,6 +190,9 @@ if (optVolumeConstraintWeight <= 0.0)
 Info<< "normalizeScenarioObjectives: "
     << (normalizeScenarioObjectives ? "enabled" : "disabled")
     << " (first valid-iteration fixed MeanT/PDCon scaling)" << endl;
+Info<< "Power constraint scaling: PDCon always uses PowerDiss/PowerDiss0; "
+    << "normalizeScenarioObjectives only adds/removes the extra first-valid-iteration scenario scaling."
+    << endl;
 Info<< "Continuation settings: alphaRampDivisor=" << alphaRampDivisor
     << ", alphaRampIterations=" << alphaRampIterations
     << ", alphaCapMultiplier=" << alphaContinuationCapMultiplier

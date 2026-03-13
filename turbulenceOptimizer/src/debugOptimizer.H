@@ -379,7 +379,8 @@ if (Pstream::master())
   (
     "projection ctl",
     "viol="+fmtScalar(projectionConstraintViolation),
-    std::string("allow=")+(allowProjectionContinuation ? "yes" : "no")
+    std::string("allow=")+(allowProjectionContinuation ? "yes" : "no"),
+    std::string("stable=")+(projectionUpdateStable ? "yes" : "no")
   );
   writeRow("drho bounds", "min="+fmtScalar(drhoLocalMin), "max="+fmtScalar(drhoLocalMax));
   writeRow("obj sens", "min="+fmtScalar(fsensLocalMin), "max="+fmtScalar(fsensLocalMax));
