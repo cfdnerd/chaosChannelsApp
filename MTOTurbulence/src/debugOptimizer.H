@@ -147,7 +147,8 @@ for(i=0;i<n;i++)
 
   if (objFunction == 2 && maxT > SMALL)
   {
-    objectivePnormSumLocal += std::pow(TValue/maxT, Pnorm);
+    const scalar PmaxT = Foam::max(maxT, 1e-10);
+    objectivePnormSumLocal += std::pow(Foam::max(TValue/PmaxT, 0.0), Pnorm);
   }
 }
 

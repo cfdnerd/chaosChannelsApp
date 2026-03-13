@@ -1,12 +1,13 @@
 //Tb=T2;
 sumT=0;
 maxT=gMax(T);
+scalar safeMaxT=Foam::max(maxT, 1e-10);
 for(i=0;i<n;i++)
 {
-   sumT=sumT+std::pow(T[i]/maxT,Pnorm);
+   sumT=sumT+std::pow(Foam::max(T[i]/safeMaxT, 0.0),Pnorm);
 }      
 reduce(sumT, sumOp<scalar>());
-sumT=std::pow(sumT,1.0/Pnorm-1);
+sumT=std::pow(Foam::max(sumT, 0.0),1.0/Pnorm-1);
 
 fvScalarMatrix TEqnb
 (
@@ -19,7 +20,7 @@ if (objFunction==1)
 }
 if (objFunction==2)
 {
-   TEqnb -= b2*sumT*Foam::pow(T/maxT,Pnorm-1);
+   TEqnb -= b2*sumT*Foam::pow(Foam::max(T/safeMaxT, scalar(0.0)),Pnorm-1);
 }
 const auto TbLinearSolvePerformance = TEqnb.solve();
 recordLinearSolve
