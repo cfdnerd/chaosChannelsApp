@@ -3,7 +3,15 @@ for(i=0;i<40;i++)
   volTensorField gradU = fvc::grad(U);
   forAll(gradU, cellI)
   {
-      gradU[cellI] = Foam::max(Foam::min(gradU[cellI], 5000.0), -5000.0);
+      gradU[cellI].xx() = Foam::max(Foam::min(gradU[cellI].xx(), 5000.0), -5000.0);
+      gradU[cellI].xy() = Foam::max(Foam::min(gradU[cellI].xy(), 5000.0), -5000.0);
+      gradU[cellI].xz() = Foam::max(Foam::min(gradU[cellI].xz(), 5000.0), -5000.0);
+      gradU[cellI].yx() = Foam::max(Foam::min(gradU[cellI].yx(), 5000.0), -5000.0);
+      gradU[cellI].yy() = Foam::max(Foam::min(gradU[cellI].yy(), 5000.0), -5000.0);
+      gradU[cellI].yz() = Foam::max(Foam::min(gradU[cellI].yz(), 5000.0), -5000.0);
+      gradU[cellI].zx() = Foam::max(Foam::min(gradU[cellI].zx(), 5000.0), -5000.0);
+      gradU[cellI].zy() = Foam::max(Foam::min(gradU[cellI].zy(), 5000.0), -5000.0);
+      gradU[cellI].zz() = Foam::max(Foam::min(gradU[cellI].zz(), 5000.0), -5000.0);
   }
   volVectorField adjointTransposeConvectionb((gradU & Ub));
 
