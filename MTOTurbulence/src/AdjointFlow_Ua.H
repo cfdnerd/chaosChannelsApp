@@ -81,6 +81,15 @@ for(i=0;i<40;i++)
   // Adjoint momentum corrector
   Ua = HbyAa - rAUa*fvc::grad(pa);
   Ua.correctBoundaryConditions();
+  
+  forAll(Ua, cellI)
+  {
+      Ua[cellI].x() = Foam::max(Foam::min(Ua[cellI].x(), 1e8), -1e8);
+      Ua[cellI].y() = Foam::max(Foam::min(Ua[cellI].y(), 1e8), -1e8);
+      Ua[cellI].z() = Foam::max(Foam::min(Ua[cellI].z(), 1e8), -1e8);
+  }
+  Ua.correctBoundaryConditions();
+  
   fvOptions.correct(Ua);
   
   Ua.storePrevIter();
