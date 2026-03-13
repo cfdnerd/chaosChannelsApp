@@ -75,6 +75,7 @@ Info<< "Reading field Tb\n" << endl;
        mesh
    ); 
 volScalarField T2(T);
+volScalarField Tb2(Tb);
 volScalarField fsensMeanT
 (
     IOobject

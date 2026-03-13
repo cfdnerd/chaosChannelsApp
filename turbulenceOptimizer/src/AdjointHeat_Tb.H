@@ -1,4 +1,4 @@
-//Tb=T2;
+Tb = Tb2;
 sumT=0;
 maxT=gMax(T);
 if (objFunction==2 && maxT > SMALL)
@@ -10,8 +10,6 @@ if (objFunction==2 && maxT > SMALL)
   reduce(sumT, sumOp<scalar>());
   sumT=std::pow(sumT,1.0/Pnorm-1);
 }
-
-DTeff = DT + turbulence->nut()/thermalTurbulentPrandtl;
 DTeff.correctBoundaryConditions();
 
 fvScalarMatrix TEqnb
@@ -30,6 +28,10 @@ if (objFunction==2)
       TEqnb -= b2*sumT*Foam::pow(T/maxT,Pnorm-1);
    }
 }
+if (enableAdjointThermalMatrixRelaxation)
+{
+  TEqnb.relax();
+}
 const auto TbLinearSolvePerformance = TEqnb.solve();
 recordLinearSolve
 (
@@ -38,3 +40,9 @@ recordLinearSolve
   TbLinearSolvePerformance.finalResidual(),
   TbLinearSolvePerformance.nIterations()
 );
+if (adjointThermalUnderRelaxation < 1.0)
+{
+  Tb = adjointThermalUnderRelaxation*Tb + (1.0 - adjointThermalUnderRelaxation)*Tb2;
+  Tb.correctBoundaryConditions();
+}
+Tb2 = Tb;

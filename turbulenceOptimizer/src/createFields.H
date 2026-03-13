@@ -119,6 +119,213 @@ scalar grayStallObjectiveTol(5e-5);
 scalar grayStallStepTol(2e-3);
 label grayStallWindow(8);
 scalar grayStallBetaGrowthFactor(1.10);
+label projectionLowGrayFreezeStartIteration(400);
+scalar projectionLowGrayFreezeThreshold(0.15);
+scalar projectionLowGrayFreezeObjectiveTol(2e-4);
+scalar projectionLowGrayFreezeStepTol(5e-4);
+scalar projectionLowGrayFreezeMinBeta(40.0);
+if (tuneOptParameters.found("continuationControl"))
+{
+  const dictionary& continuationControl = tuneOptParameters.subDict("continuationControl");
+  projectionBetaRate =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionBetaRate",
+      projectionBetaRate
+    );
+  projectionBetaMax =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionBetaMax",
+      projectionBetaMax
+    );
+  projectionBetaInitial =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionBetaInitial",
+      projectionBetaInitial
+    );
+  projectionBetaGrowthFactor =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionBetaGrowthFactor",
+      projectionBetaGrowthFactor
+    );
+  projectionUpdateInterval =
+    continuationControl.lookupOrDefault<label>
+    (
+      "projectionUpdateInterval",
+      projectionUpdateInterval
+    );
+  projectionStartIteration =
+    continuationControl.lookupOrDefault<label>
+    (
+      "projectionStartIteration",
+      projectionStartIteration
+    );
+  projectionObjectiveTolForBeta =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionObjectiveTolForBeta",
+      projectionObjectiveTolForBeta
+    );
+  projectionStepTolForBeta =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionStepTolForBeta",
+      projectionStepTolForBeta
+    );
+  powerConstraintTighteningStartIteration =
+    continuationControl.lookupOrDefault<label>
+    (
+      "powerConstraintTighteningStartIteration",
+      powerConstraintTighteningStartIteration
+    );
+  powerConstraintTighteningRate =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "powerConstraintTighteningRate",
+      powerConstraintTighteningRate
+    );
+  alphaRampDivisor =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "alphaRampDivisor",
+      alphaRampDivisor
+    );
+  alphaRampIterations =
+    continuationControl.lookupOrDefault<label>
+    (
+      "alphaRampIterations",
+      alphaRampIterations
+    );
+  alphaGrowthStartIteration =
+    continuationControl.lookupOrDefault<label>
+    (
+      "alphaGrowthStartIteration",
+      alphaGrowthStartIteration
+    );
+  alphaGrowthFactor =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "alphaGrowthFactor",
+      alphaGrowthFactor
+    );
+  alphaContinuationCapMultiplier =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "alphaContinuationCapMultiplier",
+      alphaContinuationCapMultiplier
+    );
+  quInitial =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "quInitial",
+      quInitial
+    );
+  quStage1Iteration =
+    continuationControl.lookupOrDefault<label>
+    (
+      "quStage1Iteration",
+      quStage1Iteration
+    );
+  quStage2Iteration =
+    continuationControl.lookupOrDefault<label>
+    (
+      "quStage2Iteration",
+      quStage2Iteration
+    );
+  quStage3Iteration =
+    continuationControl.lookupOrDefault<label>
+    (
+      "quStage3Iteration",
+      quStage3Iteration
+    );
+  quStage1Value =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "quStage1Value",
+      quStage1Value
+    );
+  quStage2Value =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "quStage2Value",
+      quStage2Value
+    );
+  quStage3Value =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "quStage3Value",
+      quStage3Value
+    );
+  quStage4Value =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "quStage4Value",
+      quStage4Value
+    );
+  quMax =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "quMax",
+      quMax
+    );
+  filterRStart =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "filterRStart",
+      filterRStart
+    );
+  filterREnd =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "filterREnd",
+      filterREnd
+    );
+  filterRContinuationStart =
+    continuationControl.lookupOrDefault<label>
+    (
+      "filterRContinuationStart",
+      filterRContinuationStart
+    );
+  filterRContinuationEnd =
+    continuationControl.lookupOrDefault<label>
+    (
+      "filterRContinuationEnd",
+      filterRContinuationEnd
+    );
+  projectionLowGrayFreezeStartIteration =
+    continuationControl.lookupOrDefault<label>
+    (
+      "projectionLowGrayFreezeStartIteration",
+      projectionLowGrayFreezeStartIteration
+    );
+  projectionLowGrayFreezeThreshold =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionLowGrayFreezeThreshold",
+      projectionLowGrayFreezeThreshold
+    );
+  projectionLowGrayFreezeObjectiveTol =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionLowGrayFreezeObjectiveTol",
+      projectionLowGrayFreezeObjectiveTol
+    );
+  projectionLowGrayFreezeStepTol =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionLowGrayFreezeStepTol",
+      projectionLowGrayFreezeStepTol
+    );
+  projectionLowGrayFreezeMinBeta =
+    continuationControl.lookupOrDefault<scalar>
+    (
+      "projectionLowGrayFreezeMinBeta",
+      projectionLowGrayFreezeMinBeta
+    );
+}
 if (tuneOptParameters.found("stallRecoveryControl"))
 {
   const dictionary& stallRecoveryControl = tuneOptParameters.subDict("stallRecoveryControl");
@@ -270,6 +477,16 @@ grayStallStepTol = Foam::max(grayStallStepTol, scalar(1e-10));
 grayStallWindow = Foam::max(grayStallWindow, label(1));
 grayStallBetaGrowthFactor =
   Foam::max(grayStallBetaGrowthFactor, projectionBetaGrowthFactorMin);
+projectionLowGrayFreezeStartIteration =
+  Foam::max(projectionLowGrayFreezeStartIteration, label(0));
+projectionLowGrayFreezeThreshold =
+  Foam::min(Foam::max(projectionLowGrayFreezeThreshold, scalar(0.0)), scalar(1.0));
+projectionLowGrayFreezeObjectiveTol =
+  Foam::max(projectionLowGrayFreezeObjectiveTol, scalar(1e-10));
+projectionLowGrayFreezeStepTol =
+  Foam::max(projectionLowGrayFreezeStepTol, scalar(1e-10));
+projectionLowGrayFreezeMinBeta =
+  Foam::max(projectionLowGrayFreezeMinBeta, projectionBetaInitial);
 mmaConstraintDampingGain = Foam::max(mmaConstraintDampingGain, scalar(0.0));
 mmaConstraintDampingMin =
   Foam::min(Foam::max(mmaConstraintDampingMin, scalar(1e-3)), scalar(1.0));
@@ -324,6 +541,16 @@ Info<< "Stall recovery: continuationSoftTol=" << continuationConstraintViolation
     << ", grayThreshold=" << grayStallThreshold
     << ", grayWindow=" << grayStallWindow
     << ", grayBetaGrowth=" << grayStallBetaGrowthFactor
+    << endl;
+Info<< "Shape controls: powerTighteningStart=" << powerConstraintTighteningStartIteration
+    << ", powerTighteningRate=" << powerConstraintTighteningRate
+    << ", filterRStart=" << filterRStart
+    << ", filterREnd=" << filterREnd
+    << ", filterRWindow=[" << filterRContinuationStart
+    << "," << filterRContinuationEnd << "]"
+    << ", lowGrayFreezeStart=" << projectionLowGrayFreezeStartIteration
+    << ", lowGrayFreezeThreshold=" << projectionLowGrayFreezeThreshold
+    << ", lowGrayFreezeBetaMin=" << projectionLowGrayFreezeMinBeta
     << endl;
 Info<< "Reading pseudo-density field\n" << endl;
 volScalarField xp

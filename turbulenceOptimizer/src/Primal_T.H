@@ -1,5 +1,8 @@
 T = T2;
-DTeff = DT + turbulence->nut()/thermalTurbulentPrandtl;
+volScalarField DTeffTarget(DT + turbulence->nut()/thermalTurbulentPrandtl);
+DTeff =
+  thermalDiffusivityRelaxation*DTeffTarget
+ + (1.0 - thermalDiffusivityRelaxation)*DTeff;
 DTeff.correctBoundaryConditions();
 fvScalarMatrix TEqn
 (
@@ -13,6 +16,10 @@ if(DDHS)
 else
 {
  TEqn -= thermalSource;
+}
+if (enableThermalMatrixRelaxation)
+{
+  TEqn.relax();
 }
 const auto TLinearSolvePerformancePrimary = TEqn.solve();
 recordLinearSolve

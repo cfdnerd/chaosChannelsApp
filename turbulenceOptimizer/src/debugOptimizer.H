@@ -390,6 +390,14 @@ if (Pstream::master())
     std::string("recover=")+(projectionGrayStallRecovery ? "yes" : "no"),
     "growth="+fmtScalar(projectionGrowthFactorApplied)
   );
+  writeRow
+  (
+    "projection freeze",
+    std::string("active=")+(projectionLowGrayFreezeActive ? "yes" : "no"),
+    "gray="+fmtScalar(projectionGrayFraction),
+    "beta="+fmtScalar(del),
+    "xL2="+fmtScalar(normalizedL2XChange)
+  );
   writeRow("drho bounds", "min="+fmtScalar(drhoLocalMin), "max="+fmtScalar(drhoLocalMax));
   writeRow("obj sens", "min="+fmtScalar(fsensLocalMin), "max="+fmtScalar(fsensLocalMax));
   writeRow("power sens", "min="+fmtScalar(gsensPowerLocalMin), "max="+fmtScalar(gsensPowerLocalMax));
@@ -488,6 +496,7 @@ if (Pstream::master())
       << ",\"projectionGrayFraction\":" << projectionGrayFraction
       << ",\"projectionGrayStallCounter\":" << projectionGrayStallCounter
       << ",\"projectionGrayStallRecovery\":" << (projectionGrayStallRecovery ? 1 : 0)
+      << ",\"projectionLowGrayFreezeActive\":" << (projectionLowGrayFreezeActive ? 1 : 0)
       << ",\"drhoMin\":" << drhoLocalMin
       << ",\"drhoMax\":" << drhoLocalMax
       << ",\"objectiveSensitivityFilteredMin\":" << fsensLocalMin

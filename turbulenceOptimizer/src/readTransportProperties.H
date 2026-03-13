@@ -65,12 +65,16 @@ Switch useFrozenTurbulenceAdjointTransport(true);
 Switch updateTurbulenceInletFromVelocity(true);
 Switch enableTbBcSmoothingMode(false);
 Switch enableNonFiniteMetricStop(false);
+Switch enableThermalMatrixRelaxation(true);
+Switch enableAdjointThermalMatrixRelaxation(true);
 scalar turbulenceResistanceFactor(1.0);
 scalar turbulenceResistanceCap(100.0);
 scalar turbulenceStatePenaltyFactor(1.0);
 scalar turbulenceIntensity(0.05);
 scalar turbulenceLengthScale(1e-3);
 scalar thermalUnderRelaxation(0.7);
+scalar adjointThermalUnderRelaxation(0.5);
+scalar thermalDiffusivityRelaxation(0.7);
 scalar turbulenceModelCmu(0.09);
 
 label inletPatchID(mesh.boundaryMesh().findPatchID("inlet"));
@@ -127,6 +131,24 @@ if (tuneOptParameters.found("turbulenceOptimization"))
       "enableNonFiniteMetricStop",
       enableNonFiniteMetricStop
     );
+  turbulenceResistanceFactor =
+    turbulenceOptimization.lookupOrDefault<scalar>
+    (
+      "turbulenceResistanceFactor",
+      turbulenceResistanceFactor
+    );
+  turbulenceResistanceCap =
+    turbulenceOptimization.lookupOrDefault<scalar>
+    (
+      "turbulenceResistanceCap",
+      turbulenceResistanceCap
+    );
+  turbulenceStatePenaltyFactor =
+    turbulenceOptimization.lookupOrDefault<scalar>
+    (
+      "turbulenceStatePenaltyFactor",
+      turbulenceStatePenaltyFactor
+    );
 }
 enableTbBcSmoothingMode =
   tuneOptParameters.lookupOrDefault<Switch>
@@ -134,6 +156,40 @@ enableTbBcSmoothingMode =
     "enableTbBcSmoothingMode",
     enableTbBcSmoothingMode
   );
+if (tuneOptParameters.found("thermalStabilization"))
+{
+  const dictionary& thermalStabilization = tuneOptParameters.subDict("thermalStabilization");
+  enableThermalMatrixRelaxation =
+    thermalStabilization.lookupOrDefault<Switch>
+    (
+      "enableThermalMatrixRelaxation",
+      enableThermalMatrixRelaxation
+    );
+  enableAdjointThermalMatrixRelaxation =
+    thermalStabilization.lookupOrDefault<Switch>
+    (
+      "enableAdjointThermalMatrixRelaxation",
+      enableAdjointThermalMatrixRelaxation
+    );
+  thermalUnderRelaxation =
+    thermalStabilization.lookupOrDefault<scalar>
+    (
+      "thermalUnderRelaxation",
+      thermalUnderRelaxation
+    );
+  adjointThermalUnderRelaxation =
+    thermalStabilization.lookupOrDefault<scalar>
+    (
+      "adjointThermalUnderRelaxation",
+      adjointThermalUnderRelaxation
+    );
+  thermalDiffusivityRelaxation =
+    thermalStabilization.lookupOrDefault<scalar>
+    (
+      "thermalDiffusivityRelaxation",
+      thermalDiffusivityRelaxation
+    );
+}
 
 primalFlowIterations = Foam::max(primalFlowIterations, label(1));
 adjointFlowIterations = Foam::max(adjointFlowIterations, label(1));
@@ -145,6 +201,10 @@ turbulenceStatePenaltyFactor = Foam::max(turbulenceStatePenaltyFactor, scalar(0)
 turbulenceIntensity = Foam::max(turbulenceIntensity, scalar(1e-6));
 turbulenceLengthScale = Foam::max(turbulenceLengthScale, scalar(1e-8));
 thermalUnderRelaxation = Foam::min(Foam::max(thermalUnderRelaxation, scalar(0.05)), scalar(1.0));
+adjointThermalUnderRelaxation =
+  Foam::min(Foam::max(adjointThermalUnderRelaxation, scalar(0.05)), scalar(1.0));
+thermalDiffusivityRelaxation =
+  Foam::min(Foam::max(thermalDiffusivityRelaxation, scalar(0.05)), scalar(1.0));
 turbulenceModelCmu = Foam::max(turbulenceModelCmu, scalar(1e-6));
 
 if (!useFrozenTurbulenceAdjointTransport)
@@ -174,6 +234,8 @@ Info<< "Inlet speed [m/s]: " << inletSpeed
     << " with direction " << inletVelocityDirection << endl;
 Info<< "Optimization controls: turbulentResistanceScale="
     << (useTurbulentResistance ? "on" : "off")
+    << ", turbulentResistanceFactor=" << turbulenceResistanceFactor
+    << ", turbulentResistanceCap=" << turbulenceResistanceCap
     << ", nonFiniteMetricStop=" << (enableNonFiniteMetricStop ? "on" : "off")
     << endl;
 Info<< "tbBcSmoothingMode: "
@@ -184,6 +246,10 @@ Info<< "Solver controls: freezeTurbulenceUntilIteration="
     << ", frozenAdjointTransport="
     << (useFrozenTurbulenceAdjointTransport ? "yes" : "no")
     << ", thermalUnderRelaxation=" << thermalUnderRelaxation
+    << ", adjointThermalUnderRelaxation=" << adjointThermalUnderRelaxation
+    << ", thermalDiffusivityRelaxation=" << thermalDiffusivityRelaxation
+    << ", thermalMatrixRelax=" << (enableThermalMatrixRelaxation ? "yes" : "no")
+    << ", adjointThermalMatrixRelax=" << (enableAdjointThermalMatrixRelaxation ? "yes" : "no")
     << endl;
 
 volScalarField alphaResistanceScale

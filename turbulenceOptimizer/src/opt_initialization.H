@@ -229,6 +229,7 @@ FieldCorrectionStats epsilonTurbulenceCorrectionStats;
 FieldCorrectionStats nutTurbulenceCorrectionStats;
 label projectionGrayStallCounter(0);
 bool projectionGrayStallRecovery(false);
+bool projectionLowGrayFreezeActive(false);
 scalar projectionGrayFraction(0.0);
 scalar projectionGrowthFactorApplied(1.0);
 scalar continuationProgressScale(1.0);

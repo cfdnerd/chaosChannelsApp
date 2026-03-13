@@ -77,6 +77,18 @@ projectionGrayStallCounter =
   projectionGrayStallObserved ? projectionGrayStallCounter + 1 : 0;
 projectionGrayStallRecovery =
   projectionGrayStallCounter >= grayStallWindow;
+projectionLowGrayFreezeActive =
+  projectionContinuationActive
+  &&
+  opt >= projectionLowGrayFreezeStartIteration
+  &&
+  del >= projectionLowGrayFreezeMinBeta
+  &&
+  projectionGrayFraction <= projectionLowGrayFreezeThreshold
+  &&
+  objectiveRelativeDeltaForProjection <= projectionLowGrayFreezeObjectiveTol
+  &&
+  normalizedL2XStepForProjection <= projectionLowGrayFreezeStepTol;
 const scalar projectionConstraintViolationBand =
   Foam::max
   (
@@ -115,6 +127,10 @@ if (adaptiveHeavisideProjection)
   {
     del = projectionBetaInitial;
   }
+  else if (projectionLowGrayFreezeActive)
+  {
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
+  }
   else if (projectionUpdateIteration)
   {
     scalar betaRateStep(projectionBetaRate);
@@ -139,6 +155,10 @@ else
   if (opt == 1)
   {
     del = projectionBetaInitial;
+  }
+  else if (projectionLowGrayFreezeActive)
+  {
+    del = Foam::min(Foam::max(del, projectionBetaInitial), projectionBetaMax);
   }
   else if (projectionUpdateIteration)
   {
@@ -167,6 +187,10 @@ if (projectionUpdateIteration && projectionGrayStallRecovery)
       Foam::max(del*grayStallBetaGrowthFactor, del + projectionBetaRate),
       projectionBetaMax
     );
+}
+if (projectionLowGrayFreezeActive)
+{
+  del = delPrevious;
 }
 projectionGrowthFactorApplied =
   delPrevious > SMALL ? del/delPrevious : scalar(1.0);
