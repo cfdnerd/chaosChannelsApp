@@ -1,0 +1,118 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    "(p|pa|pb|pc)"
+    {
+        solver          GAMG;
+        tolerance       1e-10;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        nPreSweeps      0;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        maxIter         5000;
+    }
+
+    "(U|Ua|Ub|Uc|k|epsilon)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        nSweeps         2;
+        tolerance       1e-9;
+        relTol          0;
+        maxIter         5000;
+    }
+     "(T)"
+    {
+        solver          GAMG;
+        tolerance       1e-10;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        nPreSweeps      0;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        nCellsInCoarsestLevel 20;
+        maxIter         20000;
+    }  
+     "(Ta|Tb)"
+    {
+        solver          GAMG;
+        tolerance       1e-10;
+        relTol          0;
+        smoother        GaussSeidel;
+        cacheAgglomeration true;
+        agglomerator    faceAreaPair;
+        mergeLevels     1;
+        nPreSweeps      0;
+        nPostSweeps     2;
+        nFinestSweeps   2;
+        nCellsInCoarsestLevel 20;
+        maxIter         20000;
+    }
+     "(xp|fsensMeanT|gsensVol|gsensPowerDiss)"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-8;
+        relTol          0;
+        maxIter         5000;
+    }
+}
+
+SIMPLE
+{
+    nNonOrthogonalCorrectors 2;
+    consistent no;
+ //   nCorrectors 2;
+// nOuterCorrectors 10;
+    pRefCell 0;
+    pRefValue 0;
+
+}
+
+relaxationFactors
+{
+    fields
+    {
+        "(p|pa|pb|pc)"     0.3;
+        alpha           0.1;
+    }
+    equations
+    {
+        "(U|Ua|Ub|Uc)"     0.7;
+        "(k|epsilon)"   0.7;
+    }
+}
+constraintFunctionDict_flow
+{
+    numberConstraintPatches      2;
+    constraintPatchesNames       (inlet outlet);
+}
+constraintFunctionDict_solid
+{
+    numberConstraintPatches      1;
+    constraintPatchesNames       (force);
+}
+// ************************************************************************* //
