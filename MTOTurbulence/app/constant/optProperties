@@ -16,7 +16,7 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 raa0                1e-5;
-voluse              0.2;
+voluse              0.3;
 mma_init            0.3;
 mma_dec             0.7;
 mma_inc             1.2;
