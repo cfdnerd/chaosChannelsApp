@@ -39,14 +39,6 @@ Switch fluid_area(optProperties.lookup("fluid_area"));
 Switch test_area(optProperties.lookup("test_area"));
 scalar Pnorm(readScalar(optProperties.lookup("Pnorm")));
 scalar objFunction(readScalar(optProperties.lookup("objFunction")));
-Switch turbulenceProMode(false);
-Switch projectionNumericalSafeguards(true);
-if (tuneOptParameters.found("turbulenceOptimization"))
-{
-  const dictionary& turbulenceOptimization = tuneOptParameters.subDict("turbulenceOptimization");
-  turbulenceProMode =
-    turbulenceOptimization.lookupOrDefault<Switch>("turbulenceProMode", turbulenceProMode);
-}
 Switch adaptiveHeavisideProjection(false);
 adaptiveHeavisideProjection =
   tuneOptParameters.lookupOrDefault<Switch>
@@ -116,6 +108,87 @@ scalar filterRStart(filterR);
 scalar filterREnd(filterR);
 label filterRContinuationStart(0);
 label filterRContinuationEnd(1);
+scalar continuationConstraintViolationSoftTol(2.0*continuationConstraintViolationFreeze);
+scalar continuationProgressMin(0.2);
+scalar grayStallContinuationBlendMin(0.1);
+scalar projectionConstraintViolationSoftTol(2.0*projectionConstraintViolationTolForBeta);
+scalar projectionBetaGrowthFactorMin(1.02);
+scalar projectionUnstableGrowthScale(0.25);
+scalar grayStallThreshold(0.85);
+scalar grayStallObjectiveTol(5e-5);
+scalar grayStallStepTol(2e-3);
+label grayStallWindow(8);
+scalar grayStallBetaGrowthFactor(1.10);
+if (tuneOptParameters.found("stallRecoveryControl"))
+{
+  const dictionary& stallRecoveryControl = tuneOptParameters.subDict("stallRecoveryControl");
+  continuationConstraintViolationSoftTol =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "continuationConstraintViolationSoftTol",
+      continuationConstraintViolationSoftTol
+    );
+  continuationProgressMin =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "continuationProgressMin",
+      continuationProgressMin
+    );
+  grayStallContinuationBlendMin =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "grayStallContinuationBlendMin",
+      grayStallContinuationBlendMin
+    );
+  projectionConstraintViolationSoftTol =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "projectionConstraintViolationSoftTol",
+      projectionConstraintViolationSoftTol
+    );
+  projectionBetaGrowthFactorMin =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "projectionBetaGrowthFactorMin",
+      projectionBetaGrowthFactorMin
+    );
+  projectionUnstableGrowthScale =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "projectionUnstableGrowthScale",
+      projectionUnstableGrowthScale
+    );
+  grayStallThreshold =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "grayStallThreshold",
+      grayStallThreshold
+    );
+  grayStallObjectiveTol =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "grayStallObjectiveTol",
+      grayStallObjectiveTol
+    );
+  grayStallStepTol =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "grayStallStepTol",
+      grayStallStepTol
+    );
+  grayStallWindow =
+    stallRecoveryControl.lookupOrDefault<label>
+    (
+      "grayStallWindow",
+      grayStallWindow
+    );
+  grayStallBetaGrowthFactor =
+    stallRecoveryControl.lookupOrDefault<scalar>
+    (
+      "grayStallBetaGrowthFactor",
+      grayStallBetaGrowthFactor
+    );
+}
 // Continuation/projection tuning is intentionally hardcoded.
 rhoMin = Foam::min(Foam::max(rhoMin, scalar(1e-6)), scalar(0.25));
 projectionBetaInitial = Foam::max(projectionBetaInitial, scalar(1e-6));
@@ -162,10 +235,41 @@ quStage4Value = Foam::max(quStage4Value, quStage3Value);
 quMax = Foam::max(quMax, quStage4Value);
 continuationConstraintViolationFreeze =
   Foam::max(continuationConstraintViolationFreeze, scalar(0.0));
+continuationConstraintViolationSoftTol =
+  Foam::max
+  (
+    continuationConstraintViolationSoftTol,
+    continuationConstraintViolationFreeze + scalar(1e-8)
+  );
 continuationBlendFast =
   Foam::min(Foam::max(continuationBlendFast, scalar(1e-6)), scalar(1.0));
 continuationBlendSlow =
   Foam::min(Foam::max(continuationBlendSlow, scalar(1e-6)), scalar(1.0));
+continuationProgressMin =
+  Foam::min(Foam::max(continuationProgressMin, scalar(1e-3)), scalar(1.0));
+grayStallContinuationBlendMin =
+  Foam::min(Foam::max(grayStallContinuationBlendMin, scalar(1e-6)), scalar(1.0));
+projectionConstraintViolationSoftTol =
+  Foam::max
+  (
+    projectionConstraintViolationSoftTol,
+    projectionConstraintViolationTolForBeta + scalar(1e-8)
+  );
+projectionBetaGrowthFactorMin =
+  Foam::min
+  (
+    Foam::max(projectionBetaGrowthFactorMin, scalar(1.0)),
+    projectionBetaGrowthFactor
+  );
+projectionUnstableGrowthScale =
+  Foam::min(Foam::max(projectionUnstableGrowthScale, scalar(0.0)), scalar(1.0));
+grayStallThreshold =
+  Foam::min(Foam::max(grayStallThreshold, scalar(0.0)), scalar(1.0));
+grayStallObjectiveTol = Foam::max(grayStallObjectiveTol, scalar(1e-10));
+grayStallStepTol = Foam::max(grayStallStepTol, scalar(1e-10));
+grayStallWindow = Foam::max(grayStallWindow, label(1));
+grayStallBetaGrowthFactor =
+  Foam::max(grayStallBetaGrowthFactor, projectionBetaGrowthFactorMin);
 mmaConstraintDampingGain = Foam::max(mmaConstraintDampingGain, scalar(0.0));
 mmaConstraintDampingMin =
   Foam::min(Foam::max(mmaConstraintDampingMin, scalar(1e-3)), scalar(1.0));
@@ -210,6 +314,16 @@ Info<< "Stability profile: projectionConstraintViolationTolForBeta="
     << ", mmaConstraintDampingGain=" << mmaConstraintDampingGain
     << ", mmaConstraintDampingMin=" << mmaConstraintDampingMin
     << ", mmaConstraintDampingActivation=" << mmaConstraintDampingActivation
+    << endl;
+Info<< "Stall recovery: continuationSoftTol=" << continuationConstraintViolationSoftTol
+    << ", continuationProgressMin=" << continuationProgressMin
+    << ", continuationBlendMin=" << grayStallContinuationBlendMin
+    << ", projectionSoftTol=" << projectionConstraintViolationSoftTol
+    << ", betaGrowthMin=" << projectionBetaGrowthFactorMin
+    << ", unstableGrowthScale=" << projectionUnstableGrowthScale
+    << ", grayThreshold=" << grayStallThreshold
+    << ", grayWindow=" << grayStallWindow
+    << ", grayBetaGrowth=" << grayStallBetaGrowthFactor
     << endl;
 Info<< "Reading pseudo-density field\n" << endl;
 volScalarField xp

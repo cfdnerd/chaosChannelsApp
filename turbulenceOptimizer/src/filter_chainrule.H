@@ -2,22 +2,12 @@ gsenshVol.primitiveFieldRef() = 1.0;
 //***********************************//Heaviside_filter
 if(opt>1)
 {
-  const scalar etaProjection =
-    projectionNumericalSafeguards
-    ? Foam::min(Foam::max(eta5, projectionEtaEps), scalar(1.0)-projectionEtaEps)
-    : eta5;
-  const scalar etaDenominator =
-    projectionNumericalSafeguards ? Foam::max(etaProjection, projectionEtaEps) : etaProjection;
-  const scalar oneMinusEtaDenominator =
-    projectionNumericalSafeguards
-    ? Foam::max(scalar(1.0)-etaProjection, projectionEtaEps)
-    : (scalar(1.0)-etaProjection);
+  const scalar etaProjection = eta5;
+  const scalar etaDenominator = etaProjection;
+  const scalar oneMinusEtaDenominator = scalar(1.0)-etaProjection;
   for(i=0;i<n;i++)
   {
-     const scalar xpProjection =
-       projectionNumericalSafeguards
-       ? Foam::min(Foam::max(xp[i], scalar(0.0)), scalar(1.0))
-       : xp[i];
+     const scalar xpProjection = xp[i];
      if(xpProjection<=etaProjection)
      {
        drho[i]=del*Foam::exp(-del*(1-xpProjection/etaDenominator))+Foam::exp(-del);
@@ -25,16 +15,6 @@ if(opt>1)
      else
      {
        drho[i]=del*Foam::exp(-del*(xpProjection-etaProjection)/oneMinusEtaDenominator)+Foam::exp(-del);
-     }
-     if (projectionNumericalSafeguards && !std::isfinite(static_cast<double>(drho[i])))
-     {
-       FatalErrorInFunction
-         << "Non-finite projection derivative at cell " << i
-         << " (xp=" << xp[i]
-         << ", xpProjection=" << xpProjection
-         << ", etaProjection=" << etaProjection
-         << ", del=" << del << ")"
-         << exit(FatalError);
      }
   }
   fsenshMeanT=fsenshMeanT*drho;

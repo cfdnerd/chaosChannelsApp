@@ -62,34 +62,15 @@ label turbulenceCorrectorInterval(1);
 label freezeTurbulenceUntilIteration(0);
 Switch useTurbulentResistance(false);
 Switch useFrozenTurbulenceAdjointTransport(true);
-Switch enableThermalFallback(true);
-Switch enforceTurbulenceBounds(false);
 Switch updateTurbulenceInletFromVelocity(true);
 Switch enableTbBcSmoothingMode(false);
-Switch enableThermalDivergenceGuard(false);
-Switch clipTemperatureField(false);
-Switch enableAdjointHeatSourceClipping(false);
 Switch enableNonFiniteMetricStop(false);
 scalar turbulenceResistanceFactor(1.0);
 scalar turbulenceResistanceCap(100.0);
 scalar turbulenceStatePenaltyFactor(1.0);
 scalar turbulenceIntensity(0.05);
 scalar turbulenceLengthScale(1e-3);
-scalar kMinBound(1e-10);
-scalar epsilonMinBound(1e-10);
-scalar kMaxBound(1e4);
-scalar epsilonMaxBound(1e8);
-scalar nutMaxBound(1e3);
-scalar thermalFallbackResidualThreshold(1e-7);
-label thermalFallbackIterationThreshold(15000);
-scalar thermalFallbackBlend(0.3);
-label thermalFallbackMaxAttempts(2);
-scalar thermalFallbackDiffusivityFactor(3.0);
 scalar thermalUnderRelaxation(0.7);
-scalar thermalFieldAbsMax(1e6);
-scalar temperatureLowerBound(-1000.0);
-scalar temperatureUpperBound(1000.0);
-scalar adjointHeatSourceClip(1e4);
 scalar turbulenceModelCmu(0.09);
 
 label inletPatchID(mesh.boundaryMesh().findPatchID("inlet"));
@@ -115,14 +96,6 @@ scalar inletSpeed(Foam::max(defaultInletSpeed, scalar(SMALL)));
 if (tuneOptParameters.found("turbulenceOptimization"))
 {
   const dictionary& turbulenceOptimization = tuneOptParameters.subDict("turbulenceOptimization");
-  turbulenceProMode =
-    turbulenceOptimization.lookupOrDefault<Switch>("turbulenceProMode", turbulenceProMode);
-  projectionNumericalSafeguards =
-    turbulenceOptimization.lookupOrDefault<Switch>
-    (
-      "projectionNumericalSafeguards",
-      projectionNumericalSafeguards
-    );
   useTurbulentResistance =
     turbulenceOptimization.lookupOrDefault<Switch>
     (
@@ -148,30 +121,6 @@ if (tuneOptParameters.found("turbulenceOptimization"))
         useFrozenTurbulenceAdjointTransport
       );
   }
-  enforceTurbulenceBounds =
-    turbulenceOptimization.lookupOrDefault<Switch>
-    (
-      "enforceTurbulenceBounds",
-      enforceTurbulenceBounds
-    );
-  enableThermalDivergenceGuard =
-    turbulenceOptimization.lookupOrDefault<Switch>
-    (
-      "enableThermalDivergenceGuard",
-      enableThermalDivergenceGuard
-    );
-  clipTemperatureField =
-    turbulenceOptimization.lookupOrDefault<Switch>
-    (
-      "clipTemperatureField",
-      clipTemperatureField
-    );
-  enableAdjointHeatSourceClipping =
-    turbulenceOptimization.lookupOrDefault<Switch>
-    (
-      "enableAdjointHeatSourceClipping",
-      enableAdjointHeatSourceClipping
-    );
   enableNonFiniteMetricStop =
     turbulenceOptimization.lookupOrDefault<Switch>
     (
@@ -195,25 +144,7 @@ turbulenceResistanceCap = Foam::max(turbulenceResistanceCap, scalar(0));
 turbulenceStatePenaltyFactor = Foam::max(turbulenceStatePenaltyFactor, scalar(0));
 turbulenceIntensity = Foam::max(turbulenceIntensity, scalar(1e-6));
 turbulenceLengthScale = Foam::max(turbulenceLengthScale, scalar(1e-8));
-kMinBound = Foam::max(kMinBound, scalar(1e-14));
-epsilonMinBound = Foam::max(epsilonMinBound, scalar(1e-14));
-kMaxBound = Foam::max(kMaxBound, kMinBound + scalar(SMALL));
-epsilonMaxBound = Foam::max(epsilonMaxBound, epsilonMinBound + scalar(SMALL));
-nutMaxBound = Foam::max(nutMaxBound, scalar(SMALL));
-thermalFallbackResidualThreshold = Foam::max(thermalFallbackResidualThreshold, scalar(1e-14));
-thermalFallbackIterationThreshold = Foam::max(thermalFallbackIterationThreshold, label(1));
-thermalFallbackBlend = Foam::min(Foam::max(thermalFallbackBlend, scalar(0.0)), scalar(1.0));
-thermalFallbackMaxAttempts = Foam::max(thermalFallbackMaxAttempts, label(1));
-thermalFallbackDiffusivityFactor = Foam::max(thermalFallbackDiffusivityFactor, scalar(1.0));
 thermalUnderRelaxation = Foam::min(Foam::max(thermalUnderRelaxation, scalar(0.05)), scalar(1.0));
-thermalFieldAbsMax = Foam::max(thermalFieldAbsMax, scalar(1.0));
-if (temperatureUpperBound <= temperatureLowerBound)
-{
-  const scalar tCenter = 0.5*(temperatureUpperBound + temperatureLowerBound);
-  temperatureLowerBound = tCenter - 1.0;
-  temperatureUpperBound = tCenter + 1.0;
-}
-adjointHeatSourceClip = Foam::max(adjointHeatSourceClip, scalar(SMALL));
 turbulenceModelCmu = Foam::max(turbulenceModelCmu, scalar(1e-6));
 
 if (!useFrozenTurbulenceAdjointTransport)
@@ -222,17 +153,6 @@ if (!useFrozenTurbulenceAdjointTransport)
     << "Full turbulence adjoint transport is not implemented. "
     << "Set useFrozenTurbulenceAdjointTransport to yes."
     << exit(FatalError);
-}
-
-if (turbulenceProMode)
-{
-  // Master switch: force-enable all Pro-mode guards/safeguards.
-  projectionNumericalSafeguards = true;
-  enforceTurbulenceBounds = true;
-  enableThermalDivergenceGuard = true;
-  clipTemperatureField = true;
-  enableAdjointHeatSourceClipping = true;
-  enableNonFiniteMetricStop = true;
 }
 
 volScalarField tbBcSmoothingMode
@@ -252,32 +172,18 @@ volScalarField tbBcSmoothingMode
 tbBcSmoothingMode.correctBoundaryConditions();
 Info<< "Inlet speed [m/s]: " << inletSpeed
     << " with direction " << inletVelocityDirection << endl;
-Info<< "turbulenceProMode: " << (turbulenceProMode ? "on" : "off") << endl;
-Info<< "Pro controls: projectionSafeguards="
-    << (projectionNumericalSafeguards ? "on" : "off")
-    << ", turbulentResistanceScale=" << (useTurbulentResistance ? "on" : "off")
-    << ", turbulenceBounds=" << (enforceTurbulenceBounds ? "on" : "off")
-    << ", thermalDivergenceGuard=" << (enableThermalDivergenceGuard ? "on" : "off")
-    << ", temperatureClipping=" << (clipTemperatureField ? "on" : "off")
-    << ", adjointHeatSourceClipping=" << (enableAdjointHeatSourceClipping ? "on" : "off")
+Info<< "Optimization controls: turbulentResistanceScale="
+    << (useTurbulentResistance ? "on" : "off")
     << ", nonFiniteMetricStop=" << (enableNonFiniteMetricStop ? "on" : "off")
-    << (turbulenceProMode ? " (forced by turbulenceProMode)" : " (individually configured)")
     << endl;
 Info<< "tbBcSmoothingMode: "
     << (enableTbBcSmoothingMode ? "enabled" : "disabled")
     << " (independent toggle)" << endl;
-Info<< "Thermal fallback path: "
-    << (enableThermalFallback ? "enabled" : "disabled")
-    << " (general, independent of turbulenceProMode)" << endl;
-Info<< "Stability controls: freezeTurbulenceUntilIteration="
+Info<< "Solver controls: freezeTurbulenceUntilIteration="
     << freezeTurbulenceUntilIteration
     << ", frozenAdjointTransport="
     << (useFrozenTurbulenceAdjointTransport ? "yes" : "no")
-    << ", turbulence bounds=[" << kMinBound << "," << kMaxBound
-    << "] epsilon=[" << epsilonMinBound << "," << epsilonMaxBound
-    << "], thermal fallback attempts=" << thermalFallbackMaxAttempts
     << ", thermalUnderRelaxation=" << thermalUnderRelaxation
-    << ", thermalFieldAbsMax=" << thermalFieldAbsMax
     << endl;
 
 volScalarField alphaResistanceScale

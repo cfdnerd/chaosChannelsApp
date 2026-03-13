@@ -382,6 +382,14 @@ if (Pstream::master())
     std::string("allow=")+(allowProjectionContinuation ? "yes" : "no"),
     std::string("stable=")+(projectionUpdateStable ? "yes" : "no")
   );
+  writeRow
+  (
+    "projection stall",
+    "gray="+fmtScalar(projectionGrayFraction),
+    "counter="+fmtCount(projectionGrayStallCounter),
+    std::string("recover=")+(projectionGrayStallRecovery ? "yes" : "no"),
+    "growth="+fmtScalar(projectionGrowthFactorApplied)
+  );
   writeRow("drho bounds", "min="+fmtScalar(drhoLocalMin), "max="+fmtScalar(drhoLocalMax));
   writeRow("obj sens", "min="+fmtScalar(fsensLocalMin), "max="+fmtScalar(fsensLocalMax));
   writeRow("power sens", "min="+fmtScalar(gsensPowerLocalMin), "max="+fmtScalar(gsensPowerLocalMax));
@@ -423,7 +431,9 @@ if (Pstream::master())
   (
     "continuation ctl",
     std::string("freeze=")+(continuationFreeze ? "yes" : "no"),
-    "blend="+fmtScalar(continuationBlend)
+    "blend="+fmtScalar(continuationBlend),
+    "progress="+fmtScalar(continuationProgressScale),
+    std::string("recover=")+(projectionGrayStallRecovery ? "yes" : "no")
   );
   writeRow("thermal props", "heatSource="+fmtScalar(heatSource.value()), "thermalSrc="+fmtScalar(thermalSource.value()), "rhoCp="+fmtScalar(rhoCp.value()));
 
@@ -474,6 +484,10 @@ if (Pstream::master())
       << ",\"eta5\":" << eta5
       << ",\"projectionConstraintViolation\":" << projectionConstraintViolation
       << ",\"projectionContinuationAllowed\":" << (allowProjectionContinuation ? 1 : 0)
+      << ",\"projectionGrowthFactorApplied\":" << projectionGrowthFactorApplied
+      << ",\"projectionGrayFraction\":" << projectionGrayFraction
+      << ",\"projectionGrayStallCounter\":" << projectionGrayStallCounter
+      << ",\"projectionGrayStallRecovery\":" << (projectionGrayStallRecovery ? 1 : 0)
       << ",\"drhoMin\":" << drhoLocalMin
       << ",\"drhoMax\":" << drhoLocalMax
       << ",\"objectiveSensitivityFilteredMin\":" << fsensLocalMin
@@ -548,6 +562,7 @@ if (Pstream::master())
       << ",\"qu\":" << qu
       << ",\"continuationFreeze\":" << (continuationFreeze ? 1 : 0)
       << ",\"continuationBlend\":" << continuationBlend
+      << ",\"continuationProgressScale\":" << continuationProgressScale
       << ",\"heatSource\":" << heatSource.value()
       << ",\"thermalSource\":" << thermalSource.value()
       << ",\"rhoCp\":" << rhoCp.value()

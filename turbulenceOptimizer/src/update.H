@@ -38,8 +38,39 @@ const scalar previousConstraintViolation =
   Foam::max(static_cast<scalar>(gx[0]), scalar(0.0));
 const bool continuationFreeze =
   previousConstraintViolation > continuationConstraintViolationFreeze;
-const scalar continuationBlend =
+const scalar continuationViolationBand =
+  Foam::max
+  (
+    continuationConstraintViolationSoftTol - continuationConstraintViolationFreeze,
+    scalar(SMALL)
+  );
+const scalar continuationStress =
+  continuationFreeze
+  ? Foam::min
+    (
+      Foam::max
+      (
+        previousConstraintViolation - continuationConstraintViolationFreeze,
+        scalar(0.0)
+      )/continuationViolationBand,
+      scalar(1.0)
+    )
+  : scalar(0.0);
+continuationProgressScale =
+  continuationFreeze
+  ? Foam::max
+    (
+      continuationProgressMin,
+      scalar(1.0) - continuationStress*(scalar(1.0) - continuationProgressMin)
+    )
+  : scalar(1.0);
+scalar continuationBlend =
   continuationFreeze ? continuationBlendSlow : continuationBlendFast;
+if (projectionGrayStallRecovery)
+{
+  continuationBlend =
+    Foam::max(continuationBlend, grayStallContinuationBlendMin);
+}
 
 scalar alphaTargetValue(alphaMax.value());
 if(opt<=alphaRampIterations)
@@ -58,8 +89,9 @@ alphaTargetValue =
   );
 if (continuationFreeze && alphaTargetValue > alphaMax.value())
 {
-  // Do not harden Brinkman resistance while power-drop constraint is violated.
-  alphaTargetValue = alphaMax.value();
+  // Under mild constraint stress, keep hardening alive but scale the rate.
+  alphaTargetValue =
+    alphaMax.value() + continuationProgressScale*(alphaTargetValue-alphaMax.value());
 }
 alphaMax.value() =
   alphaMax.value() + continuationBlend*(alphaTargetValue-alphaMax.value());
@@ -100,8 +132,8 @@ else
 }
 if (continuationFreeze && quTarget > quPrevious)
 {
-  // Freeze q-continuation escalation until constraint stress is relieved.
-  quTarget = quPrevious;
+  // Keep q-continuation moving under mild stress instead of fully freezing.
+  quTarget = quPrevious + continuationProgressScale*(quTarget-quPrevious);
 }
 qu = quPrevious + quContinuationBlend*(quTarget-quPrevious);
 qu = Foam::min(qu,quMax);

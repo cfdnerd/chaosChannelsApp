@@ -54,14 +54,14 @@ int main(int argc, char *argv[])
             currentInletSpeed = Foam::max(currentInletSpeed, scalar(SMALL));
             currentInletSpeedForLog = currentInletSpeed;
             const scalar turbulenceK =
-                Foam::max(1.5*Foam::sqr(turbulenceIntensity*currentInletSpeed), kMinBound);
+                Foam::max(1.5*Foam::sqr(turbulenceIntensity*currentInletSpeed), scalar(SMALL));
             const scalar turbulenceEpsilon =
                 Foam::max
                 (
                     Foam::pow(turbulenceModelCmu, 0.75)
                     *Foam::pow(turbulenceK, 1.5)
                     /Foam::max(turbulenceLengthScale, scalar(SMALL)),
-                    epsilonMinBound
+                    scalar(SMALL)
                 );
             if
             (

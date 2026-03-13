@@ -187,11 +187,7 @@ An examination of the existing `turbulenceOptimizer` source code reveals a mix o
 - **Verified formulation gap:** `Primal_U.H` scales Darcy resistance using turbulence intensity (`alphaResistanceScale = 1 + factor*nut/nu`), but this does not directly suppress `k` and `epsilon` production/dissipation in low-density regions.
 - **Impact:** This is an indirect stabilizer, not a substitute for design-dependent source penalization in the turbulence transport equations.
 
-### 3. Optional Post-Solve Turbulence Clipping
-- **Verified implementation risk:** The hard clipping of `k`, `epsilon`, and `nut` in `Primal_U.H` only applies when `enforceTurbulenceBounds` is enabled. It is a fallback guard, not part of the default formulation.
-- **Impact:** When enabled, the post-solve overwrites make the primal map nonsmooth and should not be treated as a sensitivity-consistent stabilization method.
-
-### 4. Supported Adjoint Model Must Be Declared Explicitly
+### 3. Supported Adjoint Model Must Be Declared Explicitly
 - **Verified implementation gap:** The adjoint currently only supports the frozen-turbulence transport approximation; a true differentiated turbulence adjoint is not implemented.
 - **Impact:** The code should expose the supported mode explicitly and fail fast if an unsupported alternative is requested, rather than silently reverting to a laminar adjoint transport model.
 

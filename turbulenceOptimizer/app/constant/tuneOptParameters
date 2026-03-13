@@ -32,15 +32,24 @@ normalizeScenarioObjectives      no;   // Normalize MeanT/PDCon using first vali
 
 turbulenceOptimization
 {
-    turbulenceProMode                 no;  // Master: force-enable all Pro controls below
-    projectionNumericalSafeguards     yes; // Projection eta clamps and non-finite guards
     useTurbulentResistance            no;  // Extra nut-based resistance scaling in alpha
     useFrozenTurbulenceAdjointTransport yes; // Only supported adjoint transport mode; 'no' aborts
-    enforceTurbulenceBounds           no;  // Clamp k/epsilon/nut to configured bounds
-    enableThermalDivergenceGuard      yes; // Stop when thermal solve becomes unhealthy
-    clipTemperatureField              no;  // Clamp T field to configured min/max
-    enableAdjointHeatSourceClipping   no;  // Clamp adjoint heat source term
     enableNonFiniteMetricStop         yes; // Stop on non-finite MeanT/PDCon/MaxT
+}
+
+stallRecoveryControl
+{
+    continuationConstraintViolationSoftTol  2e-2; // Above freeze tol, scale continuation instead of fully freezing
+    continuationProgressMin                 0.2;  // Minimum alpha/q hardening fraction retained under stress
+    grayStallContinuationBlendMin           0.1;  // Floor on continuation blend during gray-stall recovery
+    projectionConstraintViolationSoftTol    2e-2; // Mild-stress band for continued beta sharpening
+    projectionBetaGrowthFactorMin           1.02; // Minimum multiplicative beta growth under stress
+    projectionUnstableGrowthScale           0.25; // Reduce beta growth when objective/step stability is weak
+    grayStallThreshold                      0.85; // Gray fraction threshold that activates stall monitoring
+    grayStallObjectiveTol                   5e-5; // Objective stagnation threshold for gray-stall detection
+    grayStallStepTol                        2e-3; // Design-step threshold for gray-stall detection
+    grayStallWindow                         8;    // Consecutive stalled iterations before forced sharpening
+    grayStallBetaGrowthFactor               1.10; // Forced beta growth factor when gray-stall recovery fires
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
