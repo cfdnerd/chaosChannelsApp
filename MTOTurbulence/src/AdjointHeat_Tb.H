@@ -7,7 +7,7 @@ for(i=0;i<n;i++)
    sumT=sumT+std::pow(Foam::max(T[i]/safeMaxT, 0.0),Pnorm);
 }      
 reduce(sumT, sumOp<scalar>());
-sumT=std::pow(Foam::max(sumT, 0.0),1.0/Pnorm-1);
+sumT=std::pow(Foam::max(sumT, 1e-15),1.0/Pnorm-1);
 
 fvScalarMatrix TEqnb
 (
