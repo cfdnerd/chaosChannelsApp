@@ -33,14 +33,14 @@ normalizeScenarioObjectives      yes;   // Normalize MeanT/PDCon using first val
 turbulenceOptimization
 {
     turbulenceProMode                 no;  // Master: force-enable all Pro controls below
-    projectionNumericalSafeguards     no; // Projection eta clamps and non-finite guards
+    projectionNumericalSafeguards     yes; // Projection eta clamps and non-finite guards
     useTurbulentResistance            no;  // Extra nut-based resistance scaling in alpha
     useFrozenTurbulenceAdjointTransport yes; // Only supported adjoint transport mode; 'no' aborts
     enforceTurbulenceBounds           no;  // Clamp k/epsilon/nut to configured bounds
-    enableThermalDivergenceGuard      no;  // Stop when thermal solve becomes unhealthy
+    enableThermalDivergenceGuard      yes; // Stop when thermal solve becomes unhealthy
     clipTemperatureField              no;  // Clamp T field to configured min/max
     enableAdjointHeatSourceClipping   no;  // Clamp adjoint heat source term
-    enableNonFiniteMetricStop         no;  // Stop on non-finite MeanT/PDCon/MaxT
+    enableNonFiniteMetricStop         yes; // Stop on non-finite MeanT/PDCon/MaxT
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
