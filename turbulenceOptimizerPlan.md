@@ -1,4 +1,4 @@
-﻿# Turbulence Topology Optimization Plan for `laminarOptimizer`
+# Turbulence Topology Optimization Plan for `laminarOptimizer`
 
 ## 1) Goal and scope
 
@@ -160,6 +160,36 @@ Observed validated principles:
   - Validate against alternate RANS model in Stage B.
 - Overfit to a single Reynolds state
   - Run and compare separate cases over the inlet-velocity range.
+
+## 8A) Current Limitations and Critical Areas for Improvement
+
+While the core plan successfully establishes a foundation based on the frozen-turbulence adjoint strategy, it currently lacks two critical stabilizers necessary to prevent the numerical framework from failing during OpenFOAM implementation:
+
+### 1. Absence of Turbulence Variable Penalizations ($$k$$ and $$\epsilon$$/$$\omega$$)
+- **The Flaw:** The plan heavily emphasizes penalizing the apparent momentum resistance (Darcy drag via Brinkman interpolation) in low-density design regions. However, it fails to dictate the equivalent mandatory penalization for the turbulence scalar transport variables.
+- **Why this Critical:** If the velocity is forced to zero in solid topologies ($$x=0$$), but the corresponding production/dissipation terms of the turbulence model are not similarly dampened, the numerical noise at the fluid-solid interfaces will generate immense amounts of "pseudo-turbulence." This falsely spikes the effective turbulent viscosity ($$\nu_t$$), completely corrupting the frozen-turbulence adjoint assumption and causing matrix divergence.
+- **Improvement:** The implementation must explicitly couple the Brinkman interpolation field ($$\alpha$$) into the source mechanisms of the turbulence model (e.g., via `fvOptions` or directly mapped in the primal source codes). 
+
+### 2. Resolution Strategy & Boundary Models
+- **The Flaw:** The plan casually mentions "checking $$y^+$$ behavior" under mesh and BC consistency. This significantly underestimates the geometric reality of topology optimization. 
+- **Why this Critical:** Attempting to algebraically resolve the viscous sub-layer ($$y^+ \approx 1$$) over hundreds of transiently evolving 3D microchannel structures will explode the required mesh count beyond computationally viable thresholds for continuous-adjoint frameworks. 
+- **Improvement:** The framework **must** categorically abandon deep boundary layer resolution in favor of High-Reynolds standard wall functions (e.g., `kqRWallFunction`, `epsilonWallFunction`, `nutkWallFunction`). This keeps the mesh size constrained and allows the gradient solver to focus entirely on optimizing macro-scale topologies rather than repeatedly crashing on micro-fluctuations in boundary heat transfer.
+
+## 8B) Observed Flaws in the Reference `turbulenceOptimizer` Implementation
+
+An examination of the existing `turbulenceOptimizer` source code reveals three massive formulation and implementation bugs that cause instability. Any future implementation must actively avoid these pitfalls:
+
+### 1. Complete Absence of Turbulent Thermal Diffusion
+- **The Bug:** Solvers like `Primal_T.H` and `AdjointHeat_Tb.H` mistakenly use only the molecular thermal diffusivity (`fvm::laplacian(DT, T)`). 
+- **The Flaw:** Internal turbulent core heat transfer is dominated by turbulent mixing, not molecular conduction. Failing to inject `nut / Prt` into the effective thermal diffusivity (`DTeff`) causes the solver to treat cooling physics as purely laminar, rendering the optimizer blind to the primary heat exchange mechanism.
+
+### 2. Misdirected Turbulence Penalization via Velocity Scaling
+- **The Bug:** `Primal_U.H` attempts to prevent unphysical turbulence by hacking the Darcy drag: `alphaResistanceScale = 1.0 + factor * nutByNu`.
+- **The Flaw:** This is a numerical band-aid that tackles the symptom rather than penalizing the `k` and `epsilon` transport generation directly. Without source penalization in the solid domains, unphysical pseudo-turbulence generates endlessly, corrupting fluid boundaries and destroying the continuous adjoint assumptions over iterations.
+
+### 3. Aggressive Scalar Field Clipping Causing Adjoint Tearing
+- **The Bug:** To stop diverging `k` and `epsilon` (caused by the previous flaw), `Primal_U.H` forcibly overwrites out-of-bounds primitive field values via algebraic loops (`Foam::max(originalK, kMinBound)`).
+- **The Flaw:** In gradient-based topology optimization (calculating sensitivities via continuous derivatives), manually overwriting solver field values destroys the mathematical continuity (gradient chain rule) of the spatial simulations. This causes "tearing" or "checkerboarding" in the sensitivity fields during `MMA` optimization, eventually stalling the optimizer. Ensure bounding securely operates strictly inside implicit matrix solvers or via continuous penalization.
 
 ## 9) Implementation checklist
 
