@@ -20,6 +20,8 @@ FoamFile
 // and constraint violation all remain small for several consecutive loops.
 convergenceControl
 {
+    optPowerConstraintWeight 5.0;
+
     optMinIterations 200;
     optStallWindow 15;
     optObjectiveTol 1e-4;
