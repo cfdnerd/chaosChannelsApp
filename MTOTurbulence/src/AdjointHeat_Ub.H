@@ -1,6 +1,11 @@
 for(i=0;i<40;i++)
 {    
-volVectorField adjointTransposeConvectionb((fvc::grad(U) & Ub));
+  volTensorField gradU = fvc::grad(U);
+  forAll(gradU, cellI)
+  {
+      gradU[cellI] = Foam::max(Foam::min(gradU[cellI], 5000.0), -5000.0);
+  }
+  volVectorField adjointTransposeConvectionb((gradU & Ub));
 
 tmp<fvVectorMatrix> tUbEqn
 (
