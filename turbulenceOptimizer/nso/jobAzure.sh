@@ -9,4 +9,4 @@
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/shared/home/azureuser/lib/petsc/arch-linux2-c-debug/lib
 source /shared/home/azureuser/lib/openfoam/mto/OpenFOAM-6/etc/bashrc
 NPROCS=$(awk '/numberOfSubdomains/{gsub(";","",$2); print $2}' system/decomposeParDict)
-/shared/home/azureuser/lib/openfoam/mto/ThirdParty-6/platforms/linux64Gcc/openmpi-1.10.7/bin/mpirun -np ${SLURM_NTASKS:-$NPROCS} MTO_Turbulence -parallel > runLOG
+/shared/home/azureuser/lib/openfoam/mto/ThirdParty-6/platforms/linux64Gcc/openmpi-1.10.7/bin/mpirun -np ${SLURM_NTASKS:-$NPROCS} TurbulenceMTO -parallel > runLOG

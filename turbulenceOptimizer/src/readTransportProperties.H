@@ -61,7 +61,7 @@ label adjointFlowIterations(40);
 label turbulenceCorrectorInterval(1);
 label freezeTurbulenceUntilIteration(0);
 Switch useTurbulentResistance(false);
-Switch frozenTurbulenceAdjoint(true);
+Switch useFrozenTurbulenceAdjointTransport(true);
 Switch enableThermalFallback(true);
 Switch enforceTurbulenceBounds(false);
 Switch updateTurbulenceInletFromVelocity(true);
@@ -129,6 +129,25 @@ if (tuneOptParameters.found("turbulenceOptimization"))
       "useTurbulentResistance",
       useTurbulentResistance
     );
+  useFrozenTurbulenceAdjointTransport =
+    turbulenceOptimization.lookupOrDefault<Switch>
+    (
+      "useFrozenTurbulenceAdjointTransport",
+      useFrozenTurbulenceAdjointTransport
+    );
+  if (turbulenceOptimization.found("frozenTurbulenceAdjoint"))
+  {
+    WarningInFunction
+      << "Option 'frozenTurbulenceAdjoint' is deprecated. "
+      << "Use 'useFrozenTurbulenceAdjointTransport' instead."
+      << endl;
+    useFrozenTurbulenceAdjointTransport =
+      turbulenceOptimization.lookupOrDefault<Switch>
+      (
+        "frozenTurbulenceAdjoint",
+        useFrozenTurbulenceAdjointTransport
+      );
+  }
   enforceTurbulenceBounds =
     turbulenceOptimization.lookupOrDefault<Switch>
     (
@@ -197,6 +216,14 @@ if (temperatureUpperBound <= temperatureLowerBound)
 adjointHeatSourceClip = Foam::max(adjointHeatSourceClip, scalar(SMALL));
 turbulenceModelCmu = Foam::max(turbulenceModelCmu, scalar(1e-6));
 
+if (!useFrozenTurbulenceAdjointTransport)
+{
+  FatalErrorInFunction
+    << "Full turbulence adjoint transport is not implemented. "
+    << "Set useFrozenTurbulenceAdjointTransport to yes."
+    << exit(FatalError);
+}
+
 if (turbulenceProMode)
 {
   // Master switch: force-enable all Pro-mode guards/safeguards.
@@ -244,6 +271,8 @@ Info<< "Thermal fallback path: "
     << " (general, independent of turbulenceProMode)" << endl;
 Info<< "Stability controls: freezeTurbulenceUntilIteration="
     << freezeTurbulenceUntilIteration
+    << ", frozenAdjointTransport="
+    << (useFrozenTurbulenceAdjointTransport ? "yes" : "no")
     << ", turbulence bounds=[" << kMinBound << "," << kMaxBound
     << "] epsilon=[" << epsilonMinBound << "," << epsilonMaxBound
     << "], thermal fallback attempts=" << thermalFallbackMaxAttempts

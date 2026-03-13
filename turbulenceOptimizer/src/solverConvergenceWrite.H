@@ -278,7 +278,8 @@ if (Pstream::master())
     << turbulenceNutClipCountConv << "\n"
     << "  Adjoint pressure loops    : pa/Ua=" << paCorrectionsPerUa
     << ", pb/Ub=" << pbCorrectionsPerUb << "\n"
-    << "  Frozen turbulence adjoint : " << (frozenTurbulenceAdjoint ? "true" : "false") << "\n"
+    << "  Frozen adjoint transport  : "
+    << (useFrozenTurbulenceAdjointTransport ? "true" : "false") << "\n"
     << "  |Ua| mean/max             : " << UaMeanMagConv << " / " << UaMaxMagConv << "\n"
     << "  |Ub| mean/max             : " << UbMeanMagConv << " / " << UbMaxMagConv << "\n"
     << "  pa mean/min/max           : " << paMeanConv << " / " << paMinConv << " / " << paMaxConv << "\n"

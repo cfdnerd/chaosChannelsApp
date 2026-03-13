@@ -11,10 +11,13 @@ if (objFunction==2 && maxT > SMALL)
   sumT=std::pow(sumT,1.0/Pnorm-1);
 }
 
+DTeff = DT + turbulence->nut()/thermalTurbulentPrandtl;
+DTeff.correctBoundaryConditions();
+
 fvScalarMatrix TEqnb
 (
    -fvm::div(-phi,Tb) 
-   +fvm::laplacian(DT, Tb)
+   +fvm::laplacian(DTeff, Tb)
 );
 if (objFunction==1)
 {

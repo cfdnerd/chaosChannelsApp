@@ -15,6 +15,11 @@ dimensionedScalar rhoCp(thermalProperties.lookup("rhoCp"));//rho*Cp used to conv
 dimensionedScalar kf(thermalProperties.lookup("kf"));//Thermal Conductivity of fluid
 dimensionedScalar ks(thermalProperties.lookup("ks"));//Thermal Conductivity of solid
 dimensionedScalar heatSource(thermalProperties.lookup("heatSource"));//uniform volumetric heat generation (e.g. W/m^3)
+scalar thermalTurbulentPrandtl
+(
+    thermalProperties.lookupOrDefault<scalar>("Prt", 0.85)
+);
+thermalTurbulentPrandtl = Foam::max(thermalTurbulentPrandtl, scalar(SMALL));
 dimensionedScalar thermalSource("thermalSource", heatSource/rhoCp);//temperature-equation source term: q'''/(rho*Cp)
 dimensionedScalar unitThermalSource("unitThermalSource", thermalSource.dimensions(), 1.0);//unit source used for adjoint forcing
 dimensionedScalar b2("b2", dimensionSet(0,0,-1,2-Pnorm,0,0,0),1);
@@ -30,6 +35,18 @@ volScalarField DT
         IOobject::NO_WRITE
     ),
     (ks+(kf-ks)*xh*(1+qu)/(qu+xh))/rhoCp
+);
+volScalarField DTeff
+(
+    IOobject
+    (
+        "DTeff",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    DT + turbulence->nut()/thermalTurbulentPrandtl
 );
 Info<< "Reading field T\n" << endl;
     volScalarField T
