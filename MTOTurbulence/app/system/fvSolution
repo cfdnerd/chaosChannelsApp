@@ -96,13 +96,13 @@ relaxationFactors
 {
     fields
     {
-        "(p|pa|pb|pc)"     0.3;
+        "(p|pa|pb|pc)"     0.2;
         alpha           0.1;
     }
     equations
     {
-        "(U|Ua|Ub|Uc)"     0.7;
-        "(k|epsilon)"   0.7;
+        "(U|Ua|Ub|Uc)"     0.5;
+        "(k|epsilon)"   0.4;
     }
 }
 constraintFunctionDict_flow

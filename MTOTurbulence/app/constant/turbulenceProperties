@@ -14,14 +14,14 @@ FoamFile
     object      RASProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-simulationType laminar;
-//simulationType RAS;
+//simulationType laminar;
+simulationType RAS;
 
 RAS
 {
-    RASModel        laminar;
+    RASModel        kEpsilon;
 
-    turbulence      off;
+    turbulence      on;
 
     printCoeffs     off;
 }

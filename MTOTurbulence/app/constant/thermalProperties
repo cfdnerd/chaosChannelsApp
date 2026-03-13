@@ -23,5 +23,6 @@ heatSource           heatSource [1 -1 -3 0 0 0 0] 1e8;
 Talpha                       Taplha [0 0 0 -1 0 0 0] 2e-5;
 thermalStress   no;
 DDHS no;
+Prt                          Prt [0 0 0 0 0 0 0] 0.85;
 
 // ************************************************************************* //

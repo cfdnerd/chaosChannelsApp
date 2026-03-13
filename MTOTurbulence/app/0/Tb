@@ -34,7 +34,7 @@ boundaryField
        fractionExpression "f";
        value           uniform 0;
     }
-    wall
+    Wall
     {
         type            zeroGradient;   
     }
