@@ -35,12 +35,19 @@ const scalar projectionConstraintViolation =
 const bool allowProjectionContinuation =
   projectionConstraintViolation <= projectionConstraintViolationTolForBeta;
 scalar maxAbsXStepForProjectionLocal(0.0);
+scalar l2XStepForProjectionLocal(0.0);
 for(i=0;i<n;i++)
 {
+  const scalar xStep = x[i] - xOld[i];
   maxAbsXStepForProjectionLocal =
-    Foam::max(maxAbsXStepForProjectionLocal, Foam::mag(x[i] - xOld[i]));
+    Foam::max(maxAbsXStepForProjectionLocal, Foam::mag(xStep));
+  l2XStepForProjectionLocal += xStep*xStep;
 }
 reduce(maxAbsXStepForProjectionLocal, maxOp<scalar>());
+reduce(l2XStepForProjectionLocal, sumOp<scalar>());
+const scalar normalizedL2XStepForProjection =
+  std::sqrt(l2XStepForProjectionLocal)
+ /std::sqrt(Foam::max(activeDesignDOF, scalar(1)));
 
 scalar objectiveRelativeDeltaForProjection(GREAT);
 if (hasPreviousObjectiveValue)
@@ -54,6 +61,10 @@ const bool projectionUpdateStable =
   objectiveRelativeDeltaForProjection <= projectionObjectiveTolForBeta
   &&
   maxAbsXStepForProjectionLocal <= projectionStepTolForBeta;
+const bool projectionGrayStallStepSmall =
+  maxAbsXStepForProjectionLocal <= grayStallStepTol
+  ||
+  normalizedL2XStepForProjection <= grayStallStepTol;
 const bool projectionGrayStallObserved =
   projectionContinuationActive
   &&
@@ -61,7 +72,7 @@ const bool projectionGrayStallObserved =
   &&
   objectiveRelativeDeltaForProjection <= grayStallObjectiveTol
   &&
-  maxAbsXStepForProjectionLocal <= grayStallStepTol;
+  projectionGrayStallStepSmall;
 projectionGrayStallCounter =
   projectionGrayStallObserved ? projectionGrayStallCounter + 1 : 0;
 projectionGrayStallRecovery =
