@@ -32,3 +32,17 @@ if(opt>=80)
 qu=Foam::min(qu,0.01);
 alpha=alphaMax*qu*(1-xh)/(qu+xh);
 DT=(ks+(kf-ks)*xh*(1+qu)/(qu+xh))/rhoCp;
+
+// Sanitize design fields immediately after update to prevent NaN/Inf propagation
+forAll(xh, i)
+{
+    if (!std::isfinite(xh[i]) || xh[i] > 1.0) xh[i] = 1.0;
+    if (xh[i] < 0.0) xh[i] = 0.0;
+}
+forAll(xp, i)
+{
+    if (!std::isfinite(xp[i]) || xp[i] > 1.0) xp[i] = 1.0;
+    if (xp[i] < 0.0) xp[i] = 0.0;
+}
+xh.correctBoundaryConditions();
+xp.correctBoundaryConditions();
