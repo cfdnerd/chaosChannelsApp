@@ -109,7 +109,7 @@ turbulence->correct();
     // Also explicitly bound and sanitize nut (turbulent viscosity) field.
     // Extremely large or NaN nut values in solid/porous regions can lead to 
     // ill-conditioned matrices or FPEs in PBiCGStab during T and Tb solves.
-    volScalarField& nut_rans = const_cast<volScalarField&>(turbulence->nut());
+    volScalarField& nut_rans = const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("nut"));
     forAll(nut_rans, cellI)
     {
         scalar& val = nut_rans[cellI];
