@@ -1,12 +1,9 @@
 Info<< "\n run Reaction-Diffusion Level Set Method (RD-LSM) \n" << endl;
 
-// 1. Update Augmented Lagrangian multiplier for Volume Constraint
-// If V > 0, we have too much fluid. We need lsmLambda > 0 to drive Sens_phi negative (which drives phi positive/solid).
+Info<< "LSM: Updating Lagrangian multipliers..." << endl;
 const scalar lsmKpVol = 0.5;
 lsmLambda = lsmLambda + lsmKpVol * V;
 
-// 2. Update Augmented Lagrangian multiplier for Power Dissipation Constraint
-// If P_val > 0, power dissipation is too high. 
 const scalar P_val = (PowerDiss / Foam::max(PowerDissRelax - opt * 0.2, PowerDissMax) - 1.0);
 const scalar lsmKpPower = optPowerConstraintWeight;
 if (P_val > 0.0) 
@@ -15,36 +12,49 @@ if (P_val > 0.0)
 } 
 else 
 {
-    // Slowly relax multiplier if constraint is over-satisfied
     lsmLambdaPower = Foam::max(0.0, lsmLambdaPower - 0.01);
 }
 
-// 3. Calculate Phase-Field Sensitivity (Gradient of Lagrangian w.r.t Phi)
-// dL/dphi = -0.5 * dL/dxh (since xh = 0.5 * (1 - phi))
-volScalarField Sens_phi = -0.5 * fsensMeanT 
-                         - 0.5 * lsmLambda * gsensVol 
-                         - 0.5 * lsmLambdaPower * gsensPowerDiss;
+Info<< "LSM: Calculating Sens_phi..." << endl;
+// Strip dimensions for the Phase-Field Sensitivity calculation to prevent FOAM FATAL ERROR
+// Dimensions of fsensMeanT are usually [0 2 -3 0 0 0 0], gsensVol is [0 0 0 0 0 0 0].
+volScalarField Sens_phi
+(
+    IOobject("Sens_phi", runTime.timeName(), mesh, IOobject::NO_READ, IOobject::NO_WRITE),
+    mesh,
+    dimensionedScalar("zero", dimless, 0.0)
+);
 
-// Incorporate Maximum Feature Size penalty if enabled
-if (enableMaxFeatureConstraint) 
+forAll(Sens_phi, i)
 {
-    Sens_phi -= 0.5 * maxFeatureConstraintWeight * VEroded * gsensMaxFeature;
+    Sens_phi[i] = -0.5 * fsensMeanT[i] 
+                 - 0.5 * lsmLambda * gsensVol[i] 
+                 - 0.5 * lsmLambdaPower * gsensPowerDiss[i];
 }
 
-// Normalize the Raw Sensitivity
+if (enableMaxFeatureConstraint) 
+{
+    forAll(Sens_phi, i)
+    {
+        Sens_phi[i] -= 0.5 * maxFeatureConstraintWeight * VEroded * gsensMaxFeature[i];
+    }
+}
+
+
 scalar maxSens = gMax(mag(Sens_phi.primitiveField()));
 maxSens = Foam::max(maxSens, 1e-10);
 Sens_phi = Sens_phi / maxSens;
 
-// 4. Advance the Level-Set Interface (Reaction Step)
-scalar lsmStep = 0.1; // Limit interface advection step strictly
+Info<< "LSM: Advancing interface..." << endl;
+scalar lsmStep = 0.1;
 phiLSM = phiLSM - lsmStep * Sens_phi;
 
-// 5. Implicit Smoothing & Re-initialization (Diffusion Step)
-// This strictly maintains the continuous interface width and enforces topological integrity.
-// Solving: fvm::laplacian(phiLSM) - fvm::Sp(b, phiLSM) = -b * phiLSM_raw
+Info<< "LSM: Diffusion step..." << endl;
 volScalarField phiLSMRaw = phiLSM;
-const auto lsmDiffusionSolvePerf = solve(fvm::laplacian(phiLSM) - fvm::Sp(b, phiLSM) + phiLSMRaw * b);
+const auto lsmDiffusionSolvePerf = solve(fvm::laplacian(phiLSM) - fvm::Sp(b, phiLSM) == -phiLSMRaw * b);
+Info<< "LSM: Step complete." << endl;
+
+
 
 // 6. Phase Field Bounding (Reaction well limits)
 forAll(phiLSM, i)
