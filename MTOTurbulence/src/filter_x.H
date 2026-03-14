@@ -45,7 +45,7 @@ for(i=0;i<n;i++)
 
 if (enableMaxFeatureConstraint)
 {
-  scalar etaEroded = 0.8;
+  const scalar etaEroded = maxFeatureEtaEroded; // User-controlled from tuneOptParameters
   VEroded = 0.0;
   for(i=0;i<n;i++)
   {
@@ -70,14 +70,17 @@ if (enableMaxFeatureConstraint)
        drhoEroded=del*Foam::exp(-del*(xp[i]-etaEroded)/(1-etaEroded))+Foam::exp(-del); 
      }
      
-     
-     // Max feature size explicitly penalizes the volume of the eroded field.
-     gsenshMaxFeature[i] = drhoEroded; // derivative of V_eroded with respect to xp
+     gsenshMaxFeature[i] = drhoEroded;
      VEroded += xhErodedI * mesh.V()[i];
   }
   
-  // Aggregate Eroded Volume globally across processing nodes.
+  // Aggregate eroded volume globally across MPI ranks and normalize.
   reduce(VEroded, sumOp<scalar>());
   VEroded = VEroded / area;
+  
+  // Express as a constraint violation: positive = too-thick features present,
+  // negative = solid features are already thin enough (no penalty needed).
+  VEroded = VEroded - maxFeatureVolFracLimit;
 }
+
 

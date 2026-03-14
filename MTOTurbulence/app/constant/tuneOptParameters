@@ -15,24 +15,57 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Optimizer stopping controls.
-// The optimizer exits early only after the design step, objective drift,
-// and constraint violation all remain small for several consecutive loops.
+// Early-exit criteria: optimizer stops only after objective drift, design
+// step size, and constraint violations all remain small for several consecutive
+// iterations simultaneously.
 convergenceControl
 {
-    optPowerConstraintWeight 0.2;
+    optPowerConstraintWeight  0.2;
+    optMinIterations          200;
+    optStallWindow            15;
+    optObjectiveTol           1e-4;
+    optConstraintTol          1e-3;
+    optStepTol                1e-4;
+}
 
-    // Advanced Formulation Toggles
-    optimizerMethod "MMA"; // Method options: "MMA" (Density-Based) or "LSM" (Reaction-Diffusion Level Set Method)
-    enableAdjointTurbulence true;
+// Advanced formulation toggles. Enable or disable individual physics upgrades
+// independently without recompiling. Changes take effect at the next run.
+formulationControl
+{
+    // Optimizer kernel. "MMA" = Density-Based SIMP (default, stable).
+    //                   "LSM" = Reaction-Diffusion Level Set Method.
+    optimizerMethod           "MMA";
+
+    // Accounts for how design changes alter turbulence production (k, epsilon),
+    // enabling the optimizer to actively spawn turbulence-generating features.
+    enableAdjointTurbulence   true;
+
+    // Penalizes solid features that exceed a maximum thickness, preventing
+    // the formation of large solid blocks and encouraging pin-fin geometries.
     enableMaxFeatureConstraint true;
-    maxFeatureConstraintWeight 1.0;
+}
 
-    optMinIterations 200;
-    optStallWindow 15;
-    optObjectiveTol 1e-4;
-    optConstraintTol 1e-3;
-    optStepTol 1e-4;
+// Parameters controlling the maximum solid feature size constraint.
+// Only active when enableMaxFeatureConstraint is set to true above.
+maxFeatureSizeControl
+{
+    // Penalty weight applied to the max-feature constraint in the MMA/LSM
+    // Lagrangian. Increase to more aggressively break up thick solid blocks.
+    maxFeatureConstraintWeight  1.0;
+
+    // Erosion projection threshold (eta_erode). Controls the severity of the
+    // morphological erosion used to detect overly-thick solid features.
+    //   Higher value (→ 1.0) = aggressive erosion = forces very small features.
+    //   Lower value  (→ 0.5) = mild erosion     = allows larger features.
+    // Physical max solid thickness ≈ 2 * filterR * (1 - eta) / eta.
+    // Valid range: (0.5, 1.0). Recommended starting point: 0.75.
+    maxFeatureEtaEroded         0.75;
+
+    // Eroded volume fraction above which the penalty becomes active.
+    // Set slightly below your fluid volume fraction (voluse in optProperties).
+    // Example: if voluse = 0.4, set this to 0.35.
+    // Constraint is inactive (zero cost) while solid features remain thin.
+    maxFeatureVolFracLimit      0.35;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -40,24 +40,29 @@ Switch fluid_area(optProperties.lookup("fluid_area"));
 Switch test_area(optProperties.lookup("test_area"));
 scalar Pnorm(readScalar(optProperties.lookup("Pnorm")));
 scalar objFunction(readScalar(optProperties.lookup("objFunction")));
-const dictionary& convergenceControl = tuneOptParameters.subDict("convergenceControl");
-label optMinIterations(convergenceControl.lookupOrDefault<label>("optMinIterations", 50));
-label optStallWindow(convergenceControl.lookupOrDefault<label>("optStallWindow", 5));
+const dictionary& convergenceControl    = tuneOptParameters.subDict("convergenceControl");
+const dictionary& formulationControl    = tuneOptParameters.subDict("formulationControl");
+const dictionary& maxFeatureSizeControl = tuneOptParameters.subDict("maxFeatureSizeControl");
+
+// --- convergenceControl ---
+label  optMinIterations(convergenceControl.lookupOrDefault<label>("optMinIterations", 50));
+label  optStallWindow(convergenceControl.lookupOrDefault<label>("optStallWindow", 5));
 scalar optObjectiveTol(convergenceControl.lookupOrDefault<scalar>("optObjectiveTol", 1e-3));
 scalar optConstraintTol(convergenceControl.lookupOrDefault<scalar>("optConstraintTol", 1e-3));
 scalar optStepTol(convergenceControl.lookupOrDefault<scalar>("optStepTol", 5e-3));
-scalar optPowerConstraintWeight
-(
-  convergenceControl.lookupOrDefault<scalar>("optPowerConstraintWeight", 1.0)
-);
-scalar optVolumeConstraintWeight
-(
-  convergenceControl.lookupOrDefault<scalar>("optVolumeConstraintWeight", 1.0)
-);
-Switch enableAdjointTurbulence(convergenceControl.lookupOrDefault<Switch>("enableAdjointTurbulence", false));
-Switch enableMaxFeatureConstraint(convergenceControl.lookupOrDefault<Switch>("enableMaxFeatureConstraint", false));
-scalar maxFeatureConstraintWeight(convergenceControl.lookupOrDefault<scalar>("maxFeatureConstraintWeight", 1.0));
-word optimizerMethod(convergenceControl.lookupOrDefault<word>("optimizerMethod", "MMA"));
+scalar optPowerConstraintWeight(convergenceControl.lookupOrDefault<scalar>("optPowerConstraintWeight", 1.0));
+scalar optVolumeConstraintWeight(convergenceControl.lookupOrDefault<scalar>("optVolumeConstraintWeight", 1.0));
+
+// --- formulationControl ---
+word   optimizerMethod(formulationControl.lookupOrDefault<word>("optimizerMethod", "MMA"));
+Switch enableAdjointTurbulence(formulationControl.lookupOrDefault<Switch>("enableAdjointTurbulence", false));
+Switch enableMaxFeatureConstraint(formulationControl.lookupOrDefault<Switch>("enableMaxFeatureConstraint", false));
+
+// --- maxFeatureSizeControl ---
+scalar maxFeatureConstraintWeight(maxFeatureSizeControl.lookupOrDefault<scalar>("maxFeatureConstraintWeight", 1.0));
+scalar maxFeatureEtaEroded(maxFeatureSizeControl.lookupOrDefault<scalar>("maxFeatureEtaEroded", 0.75));
+scalar maxFeatureVolFracLimit(maxFeatureSizeControl.lookupOrDefault<scalar>("maxFeatureVolFracLimit", 0.35));
+
 
 if (optPowerConstraintWeight <= 0.0)
 {
