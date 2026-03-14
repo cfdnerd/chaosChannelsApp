@@ -16,13 +16,13 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 raa0                1e-5;
-voluse              0.3;
+voluse              0.4;
 mma_init            0.3;
 mma_dec             0.7;
 mma_inc             1.2;
 movlim              0.4;
-filterR             1.0;
-PowerDiss0          3e-4;
+filterR             5;
+PowerDiss0          1e-3;
 PowerDissMax        10;
 PowerDissRelax      25;
 GeoDim              2;

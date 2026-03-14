@@ -26,7 +26,7 @@ convergenceControl
 
 formulationControl
 {
-    optimizerMethod             "MMA";   // Optimizer kernel: "MMA" (Density-Based) | "LSM" (Level-Set)
+    optimizerMethod             "LSM";   // Optimizer kernel: "MMA" (Density-Based) | "LSM" (Level-Set)
     optPowerConstraintWeight    0.2;     // Penalty weight for power dissipation constraint
     enableAdjointTurbulence     true;    // Account for design change effects on turbulence production
     enableMaxFeatureConstraint  true;    // Penalize features exceeding maximum thickness (pin-fin generator)
