@@ -104,8 +104,7 @@ turbulence->correct();
         k_rans[cellI]       = Foam::max(k_rans[cellI],       scalar(1e-15));
         epsilon_rans[cellI] = Foam::max(epsilon_rans[cellI], scalar(1e-15));
     }
-    k_rans.correctBoundaryConditions();
-    epsilon_rans.correctBoundaryConditions();
+
 }
 // ----------------------------------------------
 
