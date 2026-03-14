@@ -1,6 +1,17 @@
-fsenshMeanT=fsenshMeanT/gMax(mag(fsenshMeanT.primitiveField()));
-gsenshPowerDiss=gsenshPowerDiss/gMax(mag(gsenshPowerDiss.primitiveField()));
+// Normalize sensitivities — guard against div-by-zero on iteration 1
+const scalar maxFsens = Foam::max(gMax(mag(fsenshMeanT.primitiveField())), SMALL);
+const scalar maxGsPower = Foam::max(gMax(mag(gsenshPowerDiss.primitiveField())), SMALL);
+fsenshMeanT   = fsenshMeanT   / maxFsens;
+gsenshPowerDiss = gsenshPowerDiss / maxGsPower;
 gsenshVol.primitiveFieldRef() = 1.0;
+
+// Always zero-initialize max-feature sensitivity so the Helmholtz solve
+// receives a valid field even when the Heaviside is not yet active (opt == 1).
+if (enableMaxFeatureConstraint)
+{
+    gsenshMaxFeature.primitiveFieldRef() = 0.0;
+}
+
 //***********************************//Heaviside_filter
 if(opt>1)
 {
@@ -68,12 +79,14 @@ if (enableMaxFeatureConstraint)
     );
 }
 
-
-fsensMeanT.primitiveFieldRef()=fsensMeanT.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
-gsensPowerDiss.primitiveFieldRef()=gsensPowerDiss.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
-gsensVol.primitiveFieldRef()=gsensVol.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
+// Scale sensitivities by local cell volume (normalized by max cell volume)
+const scalar maxVol = Foam::max(gMax(mesh.V()), SMALL);
+fsensMeanT.primitiveFieldRef()    = fsensMeanT.primitiveFieldRef()    * mesh.V() / maxVol;
+gsensPowerDiss.primitiveFieldRef()= gsensPowerDiss.primitiveFieldRef()* mesh.V() / maxVol;
+gsensVol.primitiveFieldRef()      = gsensVol.primitiveFieldRef()      * mesh.V() / maxVol;
 if (enableMaxFeatureConstraint)
 {
-    gsensMaxFeature.primitiveFieldRef()=gsensMaxFeature.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
+    gsensMaxFeature.primitiveFieldRef() = gsensMaxFeature.primitiveFieldRef() * mesh.V() / maxVol;
 }
+
 
