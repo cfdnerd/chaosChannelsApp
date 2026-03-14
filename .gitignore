@@ -12,6 +12,7 @@
 CommitPush.sh
 *.html
 *.png
+*.jpg
 runLOG
 *.Out
 **/solverLogs/

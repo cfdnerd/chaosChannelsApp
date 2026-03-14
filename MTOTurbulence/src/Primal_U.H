@@ -89,6 +89,26 @@ fvOptions.correct(U);
 
 turbulence->correct();
 
+// --- Turbulence Brinkman Penalization Guard ---
+// Prevent epsilon→0 SIGFPE in solid zones (kEpsilon: nut = Cmu*k²/epsilon).
+// k and epsilon are floored to 1e-15 to unconditionally block division-by-zero
+// across solid/fluid interface cells on fine meshes after aggressive MMA steps.
+// This implements the turbulence suppression strategy documented in PlanTurbulenceOpt.md.
+{
+    volScalarField& k_rans =
+        const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("k"));
+    volScalarField& epsilon_rans =
+        const_cast<volScalarField&>(mesh.lookupObject<volScalarField>("epsilon"));
+    forAll(k_rans, cellI)
+    {
+        k_rans[cellI]       = Foam::max(k_rans[cellI],       scalar(1e-15));
+        epsilon_rans[cellI] = Foam::max(epsilon_rans[cellI], scalar(1e-15));
+    }
+    k_rans.correctBoundaryConditions();
+    epsilon_rans.correctBoundaryConditions();
+}
+// ----------------------------------------------
+
 U.storePrevIter();
 p.storePrevIter();
 phi.storePrevIter();

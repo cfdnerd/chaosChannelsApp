@@ -9,7 +9,8 @@ for(i=0;i<n;i++)
  xhOld[i]=xh[i];
 }
 
-fsenshMeanT=-alphaMax*(1+qu)*qu/((qu+xh)*(qu+xh))*(U&Ub)+b1*(kf-ks)*(1+qu)*qu/((qu+xh)*(qu+xh))*(fvc::grad(T)&fvc::grad(Tb))/rhoCp;
+fsenshMeanT = -alphaMax*(1+qu)*qu/((qu+xh)*(qu+xh))*(U&Ub)
+              + b1*((kf-ks)/rhoCp + turbulence->nut()/Prt)*(1+qu)*qu/((qu+xh)*(qu+xh))*(fvc::grad(T)&fvc::grad(Tb));
 if(DDHS)//design dependent heat source
 {
  fsenshMeanT += b1*Tb*thermalSource;
