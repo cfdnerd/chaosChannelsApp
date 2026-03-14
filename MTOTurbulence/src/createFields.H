@@ -50,11 +50,10 @@ label  optStallWindow(convergenceControl.lookupOrDefault<label>("optStallWindow"
 scalar optObjectiveTol(convergenceControl.lookupOrDefault<scalar>("optObjectiveTol", 1e-3));
 scalar optConstraintTol(convergenceControl.lookupOrDefault<scalar>("optConstraintTol", 1e-3));
 scalar optStepTol(convergenceControl.lookupOrDefault<scalar>("optStepTol", 5e-3));
-scalar optPowerConstraintWeight(convergenceControl.lookupOrDefault<scalar>("optPowerConstraintWeight", 1.0));
 scalar optVolumeConstraintWeight(convergenceControl.lookupOrDefault<scalar>("optVolumeConstraintWeight", 1.0));
-
 // --- formulationControl ---
 word   optimizerMethod(formulationControl.lookupOrDefault<word>("optimizerMethod", "MMA"));
+scalar optPowerConstraintWeight(formulationControl.lookupOrDefault<scalar>("optPowerConstraintWeight", 1.0));
 Switch enableAdjointTurbulence(formulationControl.lookupOrDefault<Switch>("enableAdjointTurbulence", false));
 Switch enableMaxFeatureConstraint(formulationControl.lookupOrDefault<Switch>("enableMaxFeatureConstraint", false));
 

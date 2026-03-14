@@ -17,7 +17,6 @@ FoamFile
 
 convergenceControl
 {
-    optPowerConstraintWeight    0.2;     // Penalty weight for power dissipation constraint
     optMinIterations            200;     // Minimum iterations before checking convergence
     optStallWindow              15;      // Iteration window for stall/convergence check
     optObjectiveTol             1e-4;    // Tolerance for objective function convergence
@@ -28,6 +27,7 @@ convergenceControl
 formulationControl
 {
     optimizerMethod             "MMA";   // Optimizer kernel: "MMA" (Density-Based) | "LSM" (Level-Set)
+    optPowerConstraintWeight    0.2;     // Penalty weight for power dissipation constraint
     enableAdjointTurbulence     true;    // Account for design change effects on turbulence production
     enableMaxFeatureConstraint  true;    // Penalize features exceeding maximum thickness (pin-fin generator)
 }
