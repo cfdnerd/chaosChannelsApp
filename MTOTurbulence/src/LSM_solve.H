@@ -67,5 +67,27 @@ forAll(x, i)
 {
     x[i] = 0.5 * (1.0 - phiLSM[i]); // phi=1 (Solid) -> x=0; phi=-1 (Fluid) -> x=1.
     x[i] = Foam::max(Foam::min(x[i], 1.0), 0.0);
+}
+
+// 8. Re-enforce zones after LSM update to ensure no drift in inlet/outlets
+if(solid_area)
+{
+   forAll(cells_solid, j)
+   {
+      x[cells_solid[j]] = 0.0;
+      phiLSM[cells_solid[j]] = 1.0;
+   }
+}
+if(fluid_area)
+{
+   forAll(cells_fluid, j)
+   {
+      x[cells_fluid[j]] = 1.0;
+      phiLSM[cells_fluid[j]] = -1.0;
+   }
+}
+
+forAll(xmma, i)
+{
     xmma[i] = x[i]; // Sync GUI/Paraview output arrays
 }

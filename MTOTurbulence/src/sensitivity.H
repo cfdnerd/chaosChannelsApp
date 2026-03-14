@@ -61,6 +61,23 @@ if (optimizerMethod == "MMA")
 {
     Info<< "\n run MMA \n" << endl;
     mma.MMAsolver(xmma, dfdx, gx, dgdx);
+
+    // Re-enforce zones after MMA update to ensure no drift in inlet/outlets
+    if(solid_area)
+    {
+       forAll(cells_solid, j)
+       {
+          xmma[cells_solid[j]] = 0.0;
+       }
+    }
+    if(fluid_area)
+    {
+       forAll(cells_fluid, j)
+       {
+          xmma[cells_fluid[j]] = 1.0;
+       }
+    }
+
     for(i=0;i<n;i++)
     {
        x[i]=xmma[i];

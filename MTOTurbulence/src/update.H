@@ -4,7 +4,8 @@ if(solid_area)
 {
    forAll(cells_solid, i)
    {
-      xh[cells_solid[i]]=0;
+      xh[cells_solid[i]]=0.0;
+      x[cells_solid[i]]=0.0;
    }
 }
 if(fluid_area)
@@ -12,6 +13,15 @@ if(fluid_area)
    forAll(cells_fluid, i)
    {
       xh[cells_fluid[i]]=1.0;
+      x[cells_fluid[i]]=1.0;
+   }
+}
+if(test_area)
+{
+   forAll(cells_test, i)
+   {
+      xh[cells_test[i]]=1.0;
+      x[cells_test[i]]=1.0;
    }
 }
 xh.correctBoundaryConditions();
