@@ -7,7 +7,12 @@ for(i=0;i<n;i++)
    sumT=sumT+std::pow(Foam::max(T[i]/safeMaxT, 0.0),Pnorm);
 }      
 reduce(sumT, sumOp<scalar>());
-sumT=std::pow(Foam::max(sumT, 1e-15),1.0/Pnorm-1);
+
+// Guard against zero sumT or non-finite values before pow
+scalar safeSumT = Foam::max(sumT, 1e-15);
+if (!std::isfinite(safeSumT)) safeSumT = 1.0;
+
+sumT = std::pow(safeSumT, 1.0/Pnorm-1.0);
 
 fvScalarMatrix TEqnb
 (
