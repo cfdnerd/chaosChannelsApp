@@ -26,16 +26,16 @@ convergenceControl
 
 formulationControl
 {
-    optimizerMethod             "LSM";   // Optimizer kernel: "MMA" (Density-Based) | "LSM" (Level-Set)
-    optPowerConstraintWeight    0.2;     // Penalty weight for power dissipation constraint
+    optimizerMethod             "MMA";   // Optimizer kernel: "MMA" (Density-Based) | "LSM" (Level-Set)
+    optPowerConstraintWeight    5;     // Penalty weight for power dissipation constraint
     enableAdjointTurbulence     true;    // Account for design change effects on turbulence production
     enableMaxFeatureConstraint  true;    // Penalize features exceeding maximum thickness (pin-fin generator)
 }
 
 maxFeatureSizeControl
 {
-    maxFeatureConstraintWeight  1.0;     // Penalty weight for the maximum feature size constraint
-    maxFeatureEtaEroded         0.75;    // Erosion threshold (0.5-1.0): higher enforces thinner features
+    maxFeatureConstraintWeight  5;     // Penalty weight for the maximum feature size constraint
+    maxFeatureEtaEroded         0.8;    // Erosion threshold (0.5-1.0): higher enforces thinner features
     maxFeatureVolFracLimit      0.35;    // Eroded volume fraction limit (penalty trigger threshold)
 }
 
