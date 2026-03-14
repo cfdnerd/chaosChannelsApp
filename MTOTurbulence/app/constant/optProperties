@@ -21,7 +21,7 @@ mma_init            0.3;
 mma_dec             0.7;
 mma_inc             1.2;
 movlim              0.4;
-filterR             5;
+filterR             0.1;
 PowerDiss0          1e-3;
 PowerDissMax        10;
 PowerDissRelax      25;

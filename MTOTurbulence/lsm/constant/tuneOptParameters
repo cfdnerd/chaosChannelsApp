@@ -34,9 +34,9 @@ formulationControl
 
 maxFeatureSizeControl
 {
-    maxFeatureConstraintWeight  5;     // Penalty weight for the maximum feature size constraint
+    maxFeatureConstraintWeight  10;     // Penalty weight for the maximum feature size constraint
     maxFeatureEtaEroded         0.8;    // Erosion threshold (0.5-1.0): higher enforces thinner features
-    maxFeatureVolFracLimit      0.35;    // Eroded volume fraction limit (penalty trigger threshold)
+    maxFeatureVolFracLimit      0.3;    // Eroded volume fraction limit (penalty trigger threshold)
 }
 
 
