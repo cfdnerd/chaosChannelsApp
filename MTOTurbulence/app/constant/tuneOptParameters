@@ -22,6 +22,12 @@ convergenceControl
 {
     optPowerConstraintWeight 0.2;
 
+    // Advanced Formulation Toggles
+    optimizerMethod "MMA"; // Method options: "MMA" (Density-Based) or "LSM" (Reaction-Diffusion Level Set Method)
+    enableAdjointTurbulence true;
+    enableMaxFeatureConstraint true;
+    maxFeatureConstraintWeight 1.0;
+
     optMinIterations 200;
     optStallWindow 15;
     optObjectiveTol 1e-4;

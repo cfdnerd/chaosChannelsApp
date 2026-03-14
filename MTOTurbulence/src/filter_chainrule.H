@@ -14,10 +14,14 @@ if(opt>1)
      {
        drho[i]=del*Foam::exp(-del*(xp[i]-eta5)/(1-eta5))+Foam::exp(-del); 
      } 
-  }
   fsenshMeanT=fsenshMeanT*drho;
   gsenshPowerDiss=gsenshPowerDiss*drho;
   gsenshVol=gsenshVol*drho;
+
+  if (enableMaxFeatureConstraint)
+  {
+      gsenshMaxFeature = gsenshMaxFeature * drho;
+  }
 }
 //***********************************//PDE filter
 const auto fsensFilterLinearSolvePerformance =
@@ -50,6 +54,25 @@ recordLinearSolve
   gsensVolFilterLinearSolvePerformance.nIterations()
 );
 
+if (enableMaxFeatureConstraint)
+{
+    const auto gsensMaxFeatureFilterSolvePerformance =
+    solve(fvm::laplacian(gsensMaxFeature)-fvm::Sp(b,gsensMaxFeature)+gsenshMaxFeature*b);
+    recordLinearSolve
+    (
+      gsensMaxFeatureFilterLinearSolveStats,
+      gsensMaxFeatureFilterSolvePerformance.initialResidual(),
+      gsensMaxFeatureFilterSolvePerformance.finalResidual(),
+      gsensMaxFeatureFilterSolvePerformance.nIterations()
+    );
+}
+
+
 fsensMeanT.primitiveFieldRef()=fsensMeanT.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
 gsensPowerDiss.primitiveFieldRef()=gsensPowerDiss.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
 gsensVol.primitiveFieldRef()=gsensVol.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
+if (enableMaxFeatureConstraint)
+{
+    gsensMaxFeature.primitiveFieldRef()=gsensMaxFeature.primitiveFieldRef()*mesh.V()/gMax(mesh.V());
+}
+

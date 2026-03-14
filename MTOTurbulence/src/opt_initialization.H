@@ -148,8 +148,8 @@ LinearSolveStats UaLinearSolveStats;
 LinearSolveStats paLinearSolveStats;
 LinearSolveStats xpFilterLinearSolveStats;
 LinearSolveStats fsensFilterLinearSolveStats;
-LinearSolveStats gsensPowerFilterLinearSolveStats;
 LinearSolveStats gsensVolFilterLinearSolveStats;
+LinearSolveStats gsensMaxFeatureFilterLinearSolveStats;
 
 int i=0,opt=0;
 double del=0;
@@ -157,9 +157,10 @@ scalar n(0),N(0),eta0(0),eta5(0.5),eta1(1),y0(0),y5(0);
 n=x.size();//n:length of x in the i-th core
 N=x.size();//N:design freedom
 reduce(N, sumOp<scalar>()); 
-
-scalar V(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PDActLog(0),PD0Sug(0),PD0SugMaxCum(-GREAT),PowerDissActualOverBase(0),maxT(0),sumT(0);
+scalar V(0),VEroded(0),area=gSum(mesh.V()),MeanT(0),PowerDiss(0),PowerDissActual(0),PDActLog(0),PD0Sug(0),PD0SugMaxCum(-GREAT),PowerDissActualOverBase(0),maxT(0),sumT(0);
 scalar PD0SugSumCum(0);
+scalar lsmLambda = 0.0;
+scalar lsmLambdaPower = 0.0;
 label PD0SugCountCum(0);
 bool PD0SugLogInitialized(false);
 scalar previousObjectiveValue(0);
@@ -170,7 +171,7 @@ word optimizerStopReason("running");
 double len=std::pow(area/N, 1.0/3);
 b.value()=1.0/(filterR*len/3.464)/(filterR*len/3.464);
 //***********************************//MMA
-int m=2;//number of constraint
+int m = enableMaxFeatureConstraint ? 3 : 2; //number of constraint
 MMA mma(n,m);
 mma.asyminit = mma_init;
 mma.asymdec = mma_dec;

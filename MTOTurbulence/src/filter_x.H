@@ -42,3 +42,42 @@ for(i=0;i<n;i++)
      xh[i]=eta5+(1-eta5)*(1-Foam::exp(-del*(xp[i]-eta5)/(1-eta5))+(xp[i]-eta5)*Foam::exp(-del)/(1-eta5));
    }   
 }
+
+if (enableMaxFeatureConstraint)
+{
+  scalar etaEroded = 0.8;
+  VEroded = 0.0;
+  for(i=0;i<n;i++)
+  {
+     scalar xhErodedI;
+     if(xp[i]<=etaEroded)
+     {
+       xhErodedI=etaEroded*(Foam::exp(-del*(1-xp[i]/etaEroded))-(1-xp[i]/etaEroded)*Foam::exp(-del)); 
+     }
+     else
+     {
+       xhErodedI=etaEroded+(1-etaEroded)*(1-Foam::exp(-del*(xp[i]-etaEroded)/(1-etaEroded))+(xp[i]-etaEroded)*Foam::exp(-del)/(1-etaEroded));
+     }
+     
+     // Sensitivity chain rule drho_eroded / dxp
+     scalar drhoEroded;
+     if(xp[i]<=etaEroded)
+     {
+       drhoEroded=del*Foam::exp(-del*(1-xp[i]/etaEroded))+Foam::exp(-del); 
+     }
+     else
+     {
+       drhoEroded=del*Foam::exp(-del*(xp[i]-etaEroded)/(1-etaEroded))+Foam::exp(-del); 
+     }
+     
+     
+     // Max feature size explicitly penalizes the volume of the eroded field.
+     gsenshMaxFeature[i] = drhoEroded; // derivative of V_eroded with respect to xp
+     VEroded += xhErodedI * mesh.V()[i];
+  }
+  
+  // Aggregate Eroded Volume globally across processing nodes.
+  reduce(VEroded, sumOp<scalar>());
+  VEroded = VEroded / area;
+}
+

@@ -11,6 +11,19 @@ for(i=0;i<n;i++)
 
 fsenshMeanT = -alphaMax*(1+qu)*qu/((qu+xh)*(qu+xh))*(U&Ub)
               + b1*((kf-ks)/rhoCp + turbulence->nut()/Prt)*(1+qu)*qu/((qu+xh)*(qu+xh))*(fvc::grad(T)&fvc::grad(Tb));
+
+if (enableAdjointTurbulence)
+{
+    const volScalarField& kfld = turbulence->k();
+    const volScalarField& epsfld = turbulence->epsilon();
+    const volScalarField gradTdotTb = b1*(1+qu)*qu/((qu+xh)*(qu+xh)) * (fvc::grad(T)&fvc::grad(Tb)) / Prt;
+    
+    dimensionedScalar kSmall("kSmall", kfld.dimensions(), SMALL);
+    dimensionedScalar alphaSmall("alphaSmall", alpha.dimensions(), SMALL);
+    
+    fsenshMeanT += gradTdotTb * alphaMax * ( -2.0 * turbulence->nut() / (alpha + epsfld/(kfld+kSmall) + alphaSmall) );
+}
+
 if(DDHS)//design dependent heat source
 {
  fsenshMeanT += b1*Tb*thermalSource;
@@ -34,12 +47,28 @@ for(i=0;i<n;i++)
  dgdx[1][i]=optVolumeConstraintWeight*(gsensVol[i]/N);//sensitivities of constraint function
 }
 
-
-Info<< "\n run MMA \n" << endl;
-mma.MMAsolver(xmma, dfdx, gx, dgdx);
-for(i=0;i<n;i++)
+if (enableMaxFeatureConstraint)
 {
-   x[i]=xmma[i];
+    const scalar weightedMaxFeatureConstraint = maxFeatureConstraintWeight * VEroded;
+    gx[2] = weightedMaxFeatureConstraint;
+    for(i=0;i<n;i++)
+    {
+        dgdx[2][i]=maxFeatureConstraintWeight*(gsensMaxFeature[i]/N);
+    }
+}
+
+if (optimizerMethod == "MMA")
+{
+    Info<< "\n run MMA \n" << endl;
+    mma.MMAsolver(xmma, dfdx, gx, dgdx);
+    for(i=0;i<n;i++)
+    {
+       x[i]=xmma[i];
+    }
+}
+else if (optimizerMethod == "LSM")
+{
+    #include "LSM_solve.H"
 }
 
 #include "filter_x.H"

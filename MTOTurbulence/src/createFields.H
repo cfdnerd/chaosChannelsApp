@@ -54,6 +54,11 @@ scalar optVolumeConstraintWeight
 (
   convergenceControl.lookupOrDefault<scalar>("optVolumeConstraintWeight", 1.0)
 );
+Switch enableAdjointTurbulence(convergenceControl.lookupOrDefault<Switch>("enableAdjointTurbulence", false));
+Switch enableMaxFeatureConstraint(convergenceControl.lookupOrDefault<Switch>("enableMaxFeatureConstraint", false));
+scalar maxFeatureConstraintWeight(convergenceControl.lookupOrDefault<scalar>("maxFeatureConstraintWeight", 1.0));
+word optimizerMethod(convergenceControl.lookupOrDefault<word>("optimizerMethod", "MMA"));
+
 if (optPowerConstraintWeight <= 0.0)
 {
   FatalErrorInFunction
@@ -147,6 +152,44 @@ volScalarField gsensVol
     zeroGradientFvPatchScalarField::typeName
 );
 volScalarField gsenshVol(xh);
+
+volScalarField gsensMaxFeature
+(
+    IOobject
+    (
+        "gsensMaxFeature",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    xh,
+    zeroGradientFvPatchScalarField::typeName
+);
+volScalarField gsenshMaxFeature(xh);
+
+volScalarField phiLSM
+(
+    IOobject
+    (
+        "phiLSM",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    scalar(1.0),
+    zeroGradientFvPatchScalarField::typeName
+);
+if (optimizerMethod == "LSM")
+{
+    // Initialize implicit Phase-Field based on the explicit density map
+    forAll(phiLSM, i)
+    {
+        phiLSM[i] = 1.0 - 2.0 * xp[i];
+    }
+}
 
 // find the cells on the boundary
 dictionary conFunc = mesh.solutionDict().subDict("constraintFunctionDict_flow");
