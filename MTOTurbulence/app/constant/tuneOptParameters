@@ -65,7 +65,8 @@ maxFeatureSizeControl
         from optProperties to ensure the penalty activates only when necessary.
 
    4. STABILITY TIPS:
-      - If convergence oscillates: Reduce optStepTol or decrease 'movlim' in optProperties.
+      - If convergence oscillates or crashes (SIGFPE): REDUCE 'movlim' in optProperties 
+        to 0.1 or 0.05. High-Re flows require small steps to stay stable.
       - Adjoint Turbulence: Leave TRUE for high-Re channel flows to capture 
         design changes that actively trip or suppress turbulence.
 */

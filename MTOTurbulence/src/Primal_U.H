@@ -111,9 +111,11 @@ turbulence->correct();
     forAll(nut_rans, cellI)
     {
         scalar& val = nut_rans[cellI];
-        if (!std::isfinite(val) || val > 1.0)
+        // Limit nut to a reasonable physical scale (e.g., 50,000x laminar nu)
+        // to prevent linear solver failure in thermal equations.
+        if (!std::isfinite(val) || val > 0.05)
         {
-            val = 1.0;
+            val = 0.05;
         }
         else if (val < 0.0)
         {

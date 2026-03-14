@@ -115,16 +115,28 @@ if(solid_area)
 {
   word zoneName="solid_area";
   label zoneID=mesh.cellZones().findZoneID(zoneName);
+  if (zoneID == -1)
+  {
+      FatalErrorInFunction << "solid_area is enabled in optProperties but cellZone '" 
+                           << zoneName << "' was not found in the mesh." << exit(FatalError);
+  }
   cells_solid=mesh.cellZones()[zoneID];
   forAll(cells_solid, i)
   {
-     x[cells_solid[i]]=0;
+     x[cells_solid[i]]=0.0;
+     xp[cells_solid[i]]=0.0;
+     xh[cells_solid[i]]=0.0;
   }
 }
 if(fluid_area)
 {
   word zoneName="fluid_area";
   label zoneID=mesh.cellZones().findZoneID(zoneName);
+  if (zoneID == -1)
+  {
+      FatalErrorInFunction << "fluid_area is enabled in optProperties but cellZone '" 
+                           << zoneName << "' was not found in the mesh." << exit(FatalError);
+  }
   cells_fluid=mesh.cellZones()[zoneID];
   forAll(cells_fluid, i)
   {
@@ -137,6 +149,11 @@ if(test_area)
 {
   word zoneName="test_area";
   label zoneID=mesh.cellZones().findZoneID(zoneName);
+  if (zoneID == -1)
+  {
+      FatalErrorInFunction << "test_area is enabled in optProperties but cellZone '" 
+                           << zoneName << "' was not found in the mesh." << exit(FatalError);
+  }
   cells_test=mesh.cellZones()[zoneID];
   forAll(cells_test, i)
   {
