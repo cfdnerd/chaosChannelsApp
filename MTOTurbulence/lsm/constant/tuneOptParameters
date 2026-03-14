@@ -1,0 +1,73 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      tuneOptParameters;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convergenceControl
+{
+    optMinIterations            200;     // Minimum iterations before checking convergence
+    optStallWindow              15;      // Iteration window for stall/convergence check
+    optObjectiveTol             1e-4;    // Tolerance for objective function convergence
+    optConstraintTol            1e-3;    // Tolerance for constraint violation convergence
+    optStepTol                  1e-4;    // Tolerance for design variable step size
+}
+
+formulationControl
+{
+    optimizerMethod             "LSM";   // Optimizer kernel: "MMA" (Density-Based) | "LSM" (Level-Set)
+    optPowerConstraintWeight    5;     // Penalty weight for power dissipation constraint
+    enableAdjointTurbulence     true;    // Account for design change effects on turbulence production
+    enableMaxFeatureConstraint  true;    // Penalize features exceeding maximum thickness (pin-fin generator)
+}
+
+maxFeatureSizeControl
+{
+    maxFeatureConstraintWeight  5;     // Penalty weight for the maximum feature size constraint
+    maxFeatureEtaEroded         0.8;    // Erosion threshold (0.5-1.0): higher enforces thinner features
+    maxFeatureVolFracLimit      0.35;    // Eroded volume fraction limit (penalty trigger threshold)
+}
+
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+/* 
+   TUNING & USAGE GUIDE:
+
+   1. OPTIMIZER SELECTION (formulationControl):
+      - "MMA" (Density-SIMP): Rock-solid stability. Best for initial discovery and 
+        cases with high mesh non-orthogonality. Produces grey-scale transitions.
+      - "LSM" (Level-Set): Generates crisp, sharp boundaries. Ideal for high-detail 
+        features like pin-fins. More sensitive to initialization (phiLSM).
+
+   2. CONSTRAINT BALANCING (convergenceControl):
+      - optPowerConstraintWeight: Increase (e.g., to 1.0+) if the Pressure Drop/Power 
+        Dissipation constraint is consistently violated at the end of the run.
+      - optObjectiveTol: If the design stops changing too early, reduce to 1e-5.
+
+   3. FEATURE SIZE CONTROL (maxFeatureSizeControl):
+      - To force THINNER channels/fins: Increase maxFeatureEtaEroded (e.g., 0.85).
+        Physical thickness limit ≈ 2 * filterR * (1 - eta) / eta.
+      - To break up large solid "islands": Increase maxFeatureConstraintWeight.
+      - Triggering: Set maxFeatureVolFracLimit slightly below your target 'voluse' 
+        from optProperties to ensure the penalty activates only when necessary.
+
+   4. STABILITY TIPS:
+      - If convergence oscillates: Reduce optStepTol or decrease 'movlim' in optProperties.
+      - Adjoint Turbulence: Leave TRUE for high-Re channel flows to capture 
+        design changes that actively trip or suppress turbulence.
+*/
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
