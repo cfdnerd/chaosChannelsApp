@@ -8,12 +8,13 @@ if(opt>1)
   {
      if(xp[i]<=eta5)
      {
-       drho[i]=del*Foam::exp(-del*(1-xp[i]/eta5))+Foam::exp(-del); 
+       drho[i]=del*Foam::exp(-del*(1-xp[i]/eta5))+Foam::exp(-del);
      }
      else
      {
-       drho[i]=del*Foam::exp(-del*(xp[i]-eta5)/(1-eta5))+Foam::exp(-del); 
-     } 
+       drho[i]=del*Foam::exp(-del*(xp[i]-eta5)/(1-eta5))+Foam::exp(-del);
+     }
+  } // End of for loop
   fsenshMeanT=fsenshMeanT*drho;
   gsenshPowerDiss=gsenshPowerDiss*drho;
   gsenshVol=gsenshVol*drho;
