@@ -42,9 +42,9 @@ divSchemes
     div(-phi,Uc)    bounded Gauss upwind;
     div(phi,k)      bounded Gauss upwind;
     div(phi,epsilon) bounded Gauss upwind;
-    div(phi,T)      bounded Gauss linearUpwind grad(T);
-    div(-phi,Ta)    bounded Gauss linearUpwind grad(Ta);
-    div(-phi,Tb)    bounded Gauss linearUpwind grad(Tb);
+    div(phi,T)      bounded Gauss upwind;
+    div(-phi,Ta)    bounded Gauss upwind;
+    div(-phi,Tb)    bounded Gauss upwind;
     div((nuEff*dev2(T(grad(U))))) Gauss linear;
     div((nuEff*dev2(T(grad(Ua))))) Gauss linear;
 }
