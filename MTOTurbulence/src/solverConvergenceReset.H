@@ -10,3 +10,4 @@ resetLinearSolveStats(xpFilterLinearSolveStats);
 resetLinearSolveStats(fsensFilterLinearSolveStats);
 resetLinearSolveStats(gsensPowerFilterLinearSolveStats);
 resetLinearSolveStats(gsensVolFilterLinearSolveStats);
+resetLinearSolveStats(gsensMaxFeatureFilterLinearSolveStats);

@@ -148,6 +148,7 @@ LinearSolveStats UaLinearSolveStats;
 LinearSolveStats paLinearSolveStats;
 LinearSolveStats xpFilterLinearSolveStats;
 LinearSolveStats fsensFilterLinearSolveStats;
+LinearSolveStats gsensPowerFilterLinearSolveStats;
 LinearSolveStats gsensVolFilterLinearSolveStats;
 LinearSolveStats gsensMaxFeatureFilterLinearSolveStats;
 

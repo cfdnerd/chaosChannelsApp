@@ -85,4 +85,8 @@ if (Pstream::master())
   writeSolveStats("fsens filter", fsensFilterLinearSolveStats);
   writeSolveStats("gsensPower filter", gsensPowerFilterLinearSolveStats);
   writeSolveStats("gsensVol filter", gsensVolFilterLinearSolveStats);
+  if (enableMaxFeatureConstraint)
+  {
+    writeSolveStats("gsensMaxFeat filter", gsensMaxFeatureFilterLinearSolveStats);
+  }
 }
