@@ -28,25 +28,16 @@ convergenceControl
     optStepTol                1e-4;
 }
 
-// Advanced formulation toggles. Enable or disable individual physics upgrades
-// independently without recompiling. Changes take effect at the next run.
 formulationControl
 {
-    // Optimizer kernel. "MMA" = Density-Based SIMP (default, stable).
-    //                   "LSM" = Reaction-Diffusion Level Set Method.
-    optimizerMethod           "MMA";
+    optimizerMethod           "MMA";	// Optimizer kernel. "MMA" = Density-Based SIMP (default, stable) | "LSM" = Reaction-Diffusion Level Set Method.
 
-    // Accounts for how design changes alter turbulence production (k, epsilon),
-    // enabling the optimizer to actively spawn turbulence-generating features.
     enableAdjointTurbulence   true;
 
-    // Penalizes solid features that exceed a maximum thickness, preventing
-    // the formation of large solid blocks and encouraging pin-fin geometries.
-    enableMaxFeatureConstraint true;
+    enableMaxFeatureConstraint true;	// Penalizes solid features that exceed a maximum thickness, preventing the formation of large solid blocs
 }
 
-// Parameters controlling the maximum solid feature size constraint.
-// Only active when enableMaxFeatureConstraint is set to true above.
+// Parameters controlling the maximum solid feature size constraint, encouraging pin-fin geometries; when enableMaxFeatureConstraint true;
 maxFeatureSizeControl
 {
     // Penalty weight applied to the max-feature constraint in the MMA/LSM
